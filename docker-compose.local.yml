@@ -1,0 +1,43 @@
+# Local development / self-host compose file.
+#
+# Builds the Yamtrack image from the source tree in this repo so you can
+# customize the code and rebuild with `docker compose -f docker-compose.local.yml up --build`.
+#
+# Configuration is loaded from a `.env` file in the project root.
+# Copy `.env.example` to `.env` and edit it before the first start.
+
+services:
+  yamtrack:
+    container_name: yamtrack
+    build:
+      context: .
+      args:
+        VERSION: local
+        COMMIT_SHA: local
+    restart: unless-stopped
+    depends_on:
+      - redis
+    env_file:
+      - .env
+    volumes:
+      - ./db:/yamtrack/db
+    ports:
+      - "8000:8000"
+    networks:
+      - yamtrack-net
+
+  redis:
+    container_name: yamtrack-redis
+    image: redis:8-alpine
+    restart: unless-stopped
+    volumes:
+      - redis_data:/data
+    networks:
+      - yamtrack-net
+
+volumes:
+  redis_data:
+
+networks:
+  yamtrack-net:
+    driver: bridge
