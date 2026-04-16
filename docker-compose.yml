@@ -1,0 +1,38 @@
+services:
+  shelve:
+    container_name: shelve
+    # Image defaults to :latest tag (latest commit on the latest branch)
+    # Use :release or :vX.X.X for stable builds tied to a GitHub Release
+    # Use :dev for the development branch
+    image: ghcr.io/dannyvfilms/shelve:latest
+    restart: unless-stopped
+    depends_on:
+      - redis
+    environment:
+      - TZ=Europe/Berlin
+      - SECRET=longstring
+      - REDIS_URL=redis://redis:6379
+      - ADMIN_ENABLED=False
+    volumes:
+      - ./db:/shelve/db
+    ports:
+      - "8000:8000"
+    networks:
+      - shelve-net
+
+  redis:
+    container_name: shelve-redis
+    image: redis:8-alpine
+    restart: unless-stopped
+    volumes:
+      - redis_data:/data
+    networks:
+      - shelve-net
+
+volumes:
+  redis_data:
+
+
+networks:
+  shelve-net:
+    driver: bridge
