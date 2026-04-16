@@ -41,6 +41,86 @@
         </div>
       </div>
     </div>
+
+      <div class="bg-[#39404b] p-5 rounded-lg border border-red-900/50" x-data="{ step: 0 }">
+        <div class="flex items-center mb-3">
+          {% include "app/icons/trashcan.svg" with classes="w-5 h-5 text-red-400 mr-2" %}
+          <h3 class="text-base font-medium text-red-400">Reset Account Data</h3>
+        </div>
+        <p class="text-gray-400 mb-4 text-sm">
+          This will permanently delete <strong class="text-red-400">all your tracking data</strong> including watched movies, TV shows, anime, manga, games, books, music, podcasts, lists, ratings, collection entries, and integration accounts.
+          <br>
+          <strong class="text-white">Your account and settings will be kept.</strong>
+        </p>
+
+        {# Step 0: Initial button #}
+        <div x-show="step === 0">
+          <button @click="step = 1"
+                  type="button"
+                  class="flex items-center px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors text-sm cursor-pointer">
+            {% include "app/icons/trashcan.svg" with classes="w-4 h-4 mr-2" %}
+            Reset All Data
+          </button>
+        </div>
+
+        {# Step 1: First warning #}
+        <div x-show="step === 1" x-cloak class="bg-red-950/40 border border-red-700 rounded-lg p-4">
+          <div class="flex items-center mb-3">
+            {% include "app/icons/error.svg" with classes="w-5 h-5 text-red-400 mr-2" %}
+            <p class="text-red-400 font-semibold">Are you sure?</p>
+          </div>
+          <p class="text-gray-300 text-sm mb-4">
+            This action is <strong class="text-red-400">irreversible</strong>. All your tracked media, history, ratings, lists, and integration data will be permanently deleted.
+          </p>
+          <div class="flex space-x-3">
+            <button @click="step = 2"
+                    type="button"
+                    class="flex items-center px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors text-sm cursor-pointer">
+              Yes, I want to reset
+            </button>
+            <button @click="step = 0"
+                    type="button"
+                    class="flex items-center px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 transition-colors text-sm cursor-pointer">
+              Cancel
+            </button>
+          </div>
+        </div>
+
+        {# Step 2: Final confirmation with username input #}
+        <div x-show="step === 2" x-cloak class="bg-red-950/40 border border-red-700 rounded-lg p-4">
+          <div class="flex items-center mb-3">
+            {% include "app/icons/error.svg" with classes="w-5 h-5 text-red-400 mr-2" %}
+            <p class="text-red-400 font-semibold">Final Warning - This cannot be undone!</p>
+          </div>
+          <p class="text-gray-300 text-sm mb-4">
+            Type your username <strong class="text-white">{{ user.username }}</strong> below to confirm the reset.
+          </p>
+          <form method="post" action="{% url 'reset_account_data' %}" x-data="{ typed: '' }">
+            {% csrf_token %}
+            <input x-model="typed"
+                   name="confirmation"
+                   type="text"
+                   placeholder="Type your username to confirm"
+                   autocomplete="off"
+                   class="w-full py-2 px-3 bg-[#262a2f] rounded-md text-gray-300 text-sm border border-red-700 focus:border-red-500 focus:ring-1 focus:ring-red-500 outline-none mb-4">
+            <div class="flex space-x-3">
+              <button type="submit"
+                      :disabled="typed !== '{{ user.username }}'"
+                      :class="typed === '{{ user.username }}' ? 'bg-red-600 hover:bg-red-700 cursor-pointer' : 'bg-gray-700 cursor-not-allowed opacity-50'"
+                      class="flex items-center px-4 py-2 text-white rounded-md transition-colors text-sm">
+                {% include "app/icons/trashcan.svg" with classes="w-4 h-4 mr-2" %}
+                Permanently Delete All Data
+              </button>
+              <button @click="step = 0; typed = ''"
+                      type="button"
+                      class="flex items-center px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 transition-colors text-sm cursor-pointer">
+                Cancel
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
   </div>
 
 {% endblock settings_content %}

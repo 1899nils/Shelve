@@ -73,4 +73,9 @@ urlpatterns = [
         views.update_tmdb_settings,
         name="update_tmdb_settings",
     ),
+    path(
+        "settings/advanced/reset-account",
+        views.reset_account_data,
+        name="reset_account_data",
+    ),
 ]

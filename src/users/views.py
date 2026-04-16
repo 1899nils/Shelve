@@ -1284,6 +1284,105 @@ def update_jellyseerr_settings(request):
 
 
 @require_POST
+def reset_account_data(request):
+    """Delete all media tracking data for the current user, keeping the account."""
+    confirmation = request.POST.get("confirmation", "")
+    if confirmation != request.user.username:
+        messages.error(request, "Reset cancelled: confirmation text did not match your username.")
+        return redirect("advanced")
+
+    user = request.user
+    deleted_counts = {}
+
+    # Delete all media entries (Movie, TV, Season, Anime, Manga, Game, Book, Music, Podcast, BasicMedia, Episode)
+    from app.models import (
+        AlbumTracker,
+        ArtistTracker,
+        BasicMedia,
+        CollectionEntry,
+        DiscoverFeedback,
+        DiscoverRowCache,
+        DiscoverTasteProfile,
+        Episode,
+    )
+
+    # Media subclasses (all inherit from Media which has user FK)
+    for model_class in [BasicMedia]:
+        # Use the base Media model to catch all subclasses
+        pass
+
+    from app.models import Anime, Book, Game, Manga, Movie, Music, Podcast, Season, TV
+
+    for model_class in [Movie, TV, Season, Anime, Manga, Game, Book, Music, Podcast, BasicMedia]:
+        count, _ = model_class.objects.filter(user=user).delete()
+        if count:
+            deleted_counts[model_class.__name__] = count
+
+    # Episodes (linked through seasons, but also directly)
+    count, _ = Episode.objects.filter(related_season__user=user).delete()
+    if count:
+        deleted_counts["Episode"] = count
+
+    # Collection entries
+    count, _ = CollectionEntry.objects.filter(user=user).delete()
+    if count:
+        deleted_counts["CollectionEntry"] = count
+
+    # Music trackers
+    count, _ = ArtistTracker.objects.filter(user=user).delete()
+    if count:
+        deleted_counts["ArtistTracker"] = count
+    count, _ = AlbumTracker.objects.filter(user=user).delete()
+    if count:
+        deleted_counts["AlbumTracker"] = count
+
+    # Discover data
+    count, _ = DiscoverFeedback.objects.filter(user=user).delete()
+    if count:
+        deleted_counts["DiscoverFeedback"] = count
+    count, _ = DiscoverTasteProfile.objects.filter(user=user).delete()
+    if count:
+        deleted_counts["DiscoverTasteProfile"] = count
+    count, _ = DiscoverRowCache.objects.filter(user=user).delete()
+    if count:
+        deleted_counts["DiscoverRowCache"] = count
+
+    # Lists
+    from lists.models import CustomList
+    count, _ = CustomList.objects.filter(user=user).delete()
+    if count:
+        deleted_counts["CustomList"] = count
+
+    # Integration accounts
+    from integrations.models import (
+        LastFMAccount,
+        PlexAccount,
+        PocketCastsAccount,
+        TraktAccount,
+    )
+    for model_class in [PlexAccount, LastFMAccount, PocketCastsAccount, TraktAccount]:
+        try:
+            count, _ = model_class.objects.filter(user=user).delete()
+            if count:
+                deleted_counts[model_class.__name__] = count
+        except Exception:
+            pass
+
+    # Notification exclusions
+    user.excluded_notification_items.clear()
+
+    total = sum(deleted_counts.values())
+    logger.warning(
+        "User %s reset their account data. Deleted: %s (total %d records)",
+        user.username,
+        deleted_counts,
+        total,
+    )
+    messages.success(request, f"Account data reset. {total} records deleted.")
+    return redirect("advanced")
+
+
+@require_POST
 def update_tmdb_settings(request):
     """Save the TMDB API key to app settings."""
     from app.app_settings import clear_tmdb_api_key_cache
