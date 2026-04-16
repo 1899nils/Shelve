@@ -1,0 +1,904 @@
+@import "tailwindcss" source("../../");
+
+@theme {
+  --breakpoint-xs: 30rem;
+}
+
+[x-cloak] {
+  display: none !important;
+}
+
+.htmx-indicator {
+  display: none;
+}
+
+.htmx-request .htmx-indicator,
+.htmx-request.htmx-indicator {
+  display: block;
+}
+
+.lazyload,
+.lazyloading {
+  object-fit: none;
+}
+
+.media-card-poster {
+  object-fit: cover;
+}
+
+.clip-half {
+  clip-path: inset(0 50% 0 0);
+}
+
+/* Modal max height with padding from viewport */
+.modal-max-height {
+  max-height: calc(100vh - 4rem);
+}
+
+/* Game/Boardgame stats cards: 3-column grid on mobile, flex-wrap on desktop */
+.stats-card-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: calc(var(--spacing) * 2);
+}
+
+/* Mobile order - only apply on mobile */
+@media (max-width: 47.999rem) {
+  .stats-card-grid>[data-mobile-order="1"] {
+    order: 1;
+  }
+  .stats-card-grid>[data-mobile-order="2"] {
+    order: 2;
+  }
+  .stats-card-grid>[data-mobile-order="3"] {
+    order: 3;
+  }
+  .stats-card-grid>[data-mobile-order="4"] {
+    order: 4;
+  }
+  .stats-card-grid>[data-mobile-order="5"] {
+    order: 5;
+  }
+  .stats-card-grid>[data-mobile-order="6"] {
+    order: 6;
+  }
+  .stats-card-grid>[data-mobile-order="7"] {
+    order: 7;
+  }
+}
+
+@media (min-width: 48rem) {
+  .stats-card-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: calc(var(--spacing) * 4);
+  }
+
+  .stats-card-grid>* {
+    width: 120px;
+  }
+
+  /* Desktop order (grouped: scores, dates, time stats) */
+  .stats-card-grid>[data-desktop-order="1"] {
+    order: 1;
+  }
+  .stats-card-grid>[data-desktop-order="2"] {
+    order: 2;
+  }
+  .stats-card-grid>[data-desktop-order="3"] {
+    order: 3;
+  }
+  .stats-card-grid>[data-desktop-order="4"] {
+    order: 4;
+  }
+  .stats-card-grid>[data-desktop-order="5"] {
+    order: 5;
+  }
+  .stats-card-grid>[data-desktop-order="6"] {
+    order: 6;
+  }
+  .stats-card-grid>[data-desktop-order="7"] {
+    order: 7;
+  }
+}
+
+
+.media-grid {
+  @apply grid gap-4;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+}
+
+@media (min-width: 30rem) {
+  .media-grid {
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)) !important;
+  }
+}
+
+/* Square (1:1) media grid for music and podcasts */
+.media-grid-square {
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+}
+
+@media (min-width: 30rem) {
+  .media-grid-square {
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)) !important;
+  }
+}
+
+.detail-media-grid {
+  display: grid;
+  gap: calc(var(--spacing) * 4);
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+}
+
+/* Mobile default: active playback card spans all columns on very small screens */
+[data-active-playback-card] {
+  grid-column: span 3 !important;
+}
+
+/* Desktop: active playback card spans 2 columns by default */
+@media (min-width: 769px) {
+  [data-active-playback-card] {
+    grid-column: span 2 !important;
+  }
+}
+
+/* https://tailwindcss.com/docs/upgrade-guide#hover-styles-on-mobile */
+@custom-variant hover-tap (&:hover);
+@custom-variant parent-hover-tap (.hover-tap:hover &);
+
+.toast-error {
+  @apply bg-red-700/95 border-red-600;
+}
+
+.toast-warning {
+  @apply bg-amber-700/95 border-amber-600;
+}
+
+.toast-success {
+  @apply bg-emerald-700/95 border-emerald-600;
+}
+
+.toast-info {
+  @apply bg-indigo-700/95 border-indigo-600;
+}
+
+/*
+ * Card body gradient for text readability over poster images.
+ * Uses a ::before pseudo-element that extends above the content area
+ * to create a taller gradient that reaches higher into the card.
+ */
+.bg-card-body {
+  position: relative;
+}
+
+.bg-card-body::before {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  /* Extend gradient to 200% of content height to reach higher into card */
+  height: 200%;
+  pointer-events: none;
+  z-index: -1;
+  background-image: linear-gradient(to bottom,
+      transparent 0%,
+      color-mix(in oklab, var(--color-gray-900) 50%, transparent) 40%,
+      color-mix(in oklab, var(--color-gray-900) 85%, transparent) 70%,
+      color-mix(in oklab, var(--color-gray-900) 98%, transparent) 100%);
+}
+
+.media-card-overlay {
+  z-index: 5;
+}
+
+.media-card-body {
+  position: relative;
+  z-index: 10;
+}
+
+/*
+ * Hide hover overlay on mobile when grid is compact.
+ * Simplifies touch: tap anywhere to navigate to details,
+ * tap bottom to see title hover.
+ */
+@media (pointer: coarse) {
+  body[data-mobile-grid="compact"] .media-card-overlay {
+    display: none;
+  }
+}
+
+.media-card .media-status-chip,
+.media-card .media-score-chip,
+.media-card .media-progress-chip,
+.media-card .media-time-left-chip,
+.media-card .media-repeat-chip {
+  z-index: 6;
+}
+
+[data-quick-season-mobile="false"] .media-card-progress {
+  display: none !important;
+}
+
+.stat-scroll-safe {
+  width: 100%;
+  overflow-x: hidden;
+}
+
+/*
+ * Statistics top card scroll containers
+ * Used by: Most Played, Top Genres, Top Rated, Top Artists, Top Albums,
+ *          Top Tracks, Top Decades, Top Countries, Most Listened, etc.
+ *
+ * Two types of list items exist in these cards:
+ * 1. Clickable items (<a> tags): Have `p-1 -m-1` classes for hover effect padding.
+ *    These are visually 48px tall (40px icon + 8px padding).
+ * 2. Non-clickable items (<div> tags): Plain flex containers at 40px tall.
+ *    Examples: Top Decades, Top Countries in Music section.
+ *
+ * The max-height is tuned to show exactly 5 items before scrolling.
+ */
+.statistics-card-scroll {
+  max-height: 275px;
+}
+
+.statistics-card-scroll> :not([hidden])~ :not([hidden]) {
+  margin-top: 12px;
+  /* Gap between list items - replaces Tailwind space-y-3 */
+}
+
+.search-result-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  /* Fixed aspect ratio to prevent grid shift */
+  aspect-ratio: 2/3;
+  overflow: hidden;
+}
+
+/* Poster container - fixed size, doesn't change on hover */
+.search-result-card>div:first-child {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  overflow: hidden;
+}
+
+/* Ensure the image link/wrapper fills the poster container */
+.search-result-card>div:first-child>a:first-child,
+.search-result-card>div:first-child>div.cursor-pointer {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.search-result-card .media-card-poster {
+  width: 100%;
+  height: 100%;
+  object-fit: cover !important;
+  aspect-ratio: unset !important;
+}
+
+.search-result-card .media-card-title,
+.search-result-card .search-result-title {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.search-result-card:hover .media-card-title,
+.search-result-card:hover .search-result-title {
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+}
+
+.search-result-card .media-card-body {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 10;
+  transform: translateY(var(--year-height, 1.25rem));
+  transition: transform 0.2s ease;
+}
+
+.search-result-card .media-card-year {
+  opacity: 0;
+  transition: opacity 0.1s ease;
+}
+
+.search-result-card:hover .media-card-body {
+  transform: translateY(0);
+}
+
+.search-result-card:hover .media-card-year {
+  opacity: 1;
+  transition: opacity 0.2s ease;
+}
+
+.search-result-card.media-card-subtitle-always .media-card-body {
+  transform: translateY(0);
+}
+
+.search-result-card.media-card-subtitle-always .media-card-year {
+  opacity: 1;
+}
+
+/*
+ * Square variant for podcasts and music (1:1 aspect ratio)
+ * Used when mixing media types in history grids - square cards go on their own row
+ * to maintain grid coherence while respecting native artwork aspect ratios.
+ */
+.search-result-card-square {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  aspect-ratio: 1/1;
+  overflow: hidden;
+}
+
+.search-result-card-square>div:first-child {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  overflow: hidden;
+}
+
+.search-result-card-square>div:first-child>a:first-child,
+.search-result-card-square>div:first-child>div.cursor-pointer {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.search-result-card-square .media-card-poster {
+  width: 100%;
+  height: 100%;
+  object-fit: cover !important;
+  aspect-ratio: unset !important;
+}
+
+.search-result-card-square .media-card-title,
+.search-result-card-square .search-result-title {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.search-result-card-square:hover .media-card-title,
+.search-result-card-square:hover .search-result-title {
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+}
+
+.search-result-card-square .media-card-body {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 10;
+  transform: translateY(var(--year-height, 1.25rem));
+  transition: transform 0.2s ease;
+}
+
+.search-result-card-square .media-card-year {
+  opacity: 0;
+  transition: opacity 0.1s ease;
+}
+
+.search-result-card-square:hover .media-card-body {
+  transform: translateY(0);
+}
+
+.search-result-card-square:hover .media-card-year {
+  opacity: 1;
+  transition: opacity 0.2s ease;
+}
+
+.search-result-card-square.media-card-subtitle-always .media-card-body {
+  transform: translateY(0);
+}
+
+.search-result-card-square.media-card-subtitle-always .media-card-year {
+  opacity: 1;
+}
+
+.stat-scroll-safe.stat-tooltip-safe {
+  overflow: visible;
+}
+
+@media (max-width: 768px) {
+  .media-card {
+    background-color: transparent !important;
+    box-shadow: none;
+  }
+
+  .media-card-body {
+    padding: calc(var(--spacing) * 2) calc(var(--spacing) * 2) calc(var(--spacing) * 1.5) !important;
+  }
+
+  .media-card-body>.flex {
+    align-items: center;
+    justify-content: flex-start;
+  }
+
+  .media-card-title {
+    padding-top: 0;
+    font-weight: 600;
+    font-size: var(--text-xs);
+    text-align: left !important;
+  }
+
+  .media-card-body>*+* {
+    margin-top: calc(var(--spacing) * 0.25);
+  }
+
+  .media-card-body.space-y-3> :not([hidden])~ :not([hidden]) {
+    margin-top: calc(var(--spacing) * 0.25) !important;
+  }
+
+  .media-card[data-media-type="game"] .media-card-duration {
+    display: none;
+  }
+
+  /* Hide progress adjust buttons on mobile by default; always show in card context row. */
+  .progress-adjust-btn {
+    display: none !important;
+  }
+
+  [data-quick-season-mobile="true"] .progress-adjust-btn {
+    display: block !important;
+  }
+
+  [data-quick-season-mobile="true"] .media-card-progress .progress-adjust-btn {
+    display: inline-flex !important;
+  }
+
+  .media-card-poster {
+    border-bottom-left-radius: var(--radius-lg);
+    border-bottom-right-radius: var(--radius-lg);
+  }
+
+  /* When quick season buttons are enabled, restore card styling */
+  [data-quick-season-mobile="true"] .media-card {
+    background-color: var(--color-gray-800, #2a2f35) !important;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05) !important;
+  }
+
+  [data-quick-season-mobile="true"] .media-card-body {
+    padding: calc(var(--spacing) * 3) !important;
+  }
+
+  [data-quick-season-mobile="true"] .media-card-poster {
+    border-bottom-left-radius: 0 !important;
+    border-bottom-right-radius: 0 !important;
+  }
+
+  .media-grid {
+    gap: calc(var(--spacing) * 3);
+  }
+
+  .detail-media-grid {
+    gap: calc(var(--spacing) * 3);
+  }
+
+  /* Mobile grid layout preference */
+  [data-mobile-grid="comfortable"] .media-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  [data-mobile-grid="comfortable"] .detail-media-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  [data-mobile-grid="compact"] .media-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  }
+
+  [data-mobile-grid="compact"] .detail-media-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  }
+
+  /* Active playback card spanning */
+  [data-mobile-grid="comfortable"] [data-active-playback-card] {
+    grid-column: span 2 !important;
+  }
+
+  [data-mobile-grid="compact"] [data-active-playback-card] {
+    grid-column: span 3 !important;
+  }
+
+  [data-mobile-grid="compact"] .media-card-progress .progress-unit {
+    display: none !important;
+  }
+
+  .media-card-progress,
+  .media-card-progress .progress-changer,
+  .media-card-progress .progress-changer>div {
+    text-align: center;
+    justify-content: center;
+  }
+
+  .progress-changer {
+    width: 100%;
+  }
+
+  .media-card-progress[data-progress-mode="conditional"] {
+    display: none !important;
+  }
+
+  .media-card-progress[data-progress-mode="conditional"][data-mobile-show="true"] {
+    display: block !important;
+  }
+
+  /* Show progress container when quick season buttons are enabled */
+  [data-quick-season-mobile="true"] .media-card-progress[data-progress-mode="conditional"] {
+    display: block !important;
+  }
+
+  /* Make the progress-changer container visible when quick season buttons are enabled */
+  [data-quick-season-mobile="true"] .media-card-progress[data-progress-mode="conditional"] .progress-changer {
+    background-color: transparent;
+    border-radius: 0;
+    padding: 0;
+  }
+
+  /* Remove any background from the inner div containing episode count */
+  [data-quick-season-mobile="true"] .media-card-progress[data-progress-mode="conditional"] .progress-changer>div {
+    background-color: transparent !important;
+    padding: 0 !important;
+    border-radius: 0 !important;
+  }
+
+  .media-progress-chip[data-progress-chip-mode="conditional"] {
+    display: none !important;
+  }
+
+  .media-progress-chip[data-progress-chip-mode="conditional"][data-mobile-show="true"] {
+    display: flex !important;
+  }
+
+  .media-time-left-chip[data-time-left-mode="conditional"] {
+    display: none !important;
+  }
+
+  .media-time-left-chip[data-time-left-mode="conditional"][data-mobile-show="true"] {
+    display: flex !important;
+  }
+
+  .media-score-chip[data-score-chip-mode="conditional"] {
+    display: none !important;
+  }
+
+  .media-score-chip[data-score-chip-mode="conditional"][data-mobile-show="true"] {
+    display: flex !important;
+    top: calc(var(--spacing) * 2) !important;
+  }
+
+  .media-status-chip[data-mobile-hide-on-mobile="true"] {
+    display: none !important;
+  }
+
+  .media-grid .p-3 {
+    padding: calc(var(--spacing) * 2);
+  }
+
+  .detail-media-grid .p-3 {
+    padding: calc(var(--spacing) * 2);
+  }
+
+  .filter-toolbar {
+    width: 100%;
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) auto;
+    column-gap: calc(var(--spacing) * 2);
+    row-gap: calc(var(--spacing) * 2);
+    align-items: stretch;
+  }
+
+  .filter-toolbar .filter-control {
+    width: 100%;
+  }
+
+  .filter-toolbar .filter-control>button {
+    width: 100%;
+    padding-inline: calc(var(--spacing) * 3) !important;
+    padding-block: calc(var(--spacing) * 1.5) !important;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    gap: calc(var(--spacing) * 0.25);
+  }
+
+  .filter-toolbar .filter-control>button span {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: clip;
+  }
+
+  .media-filter-toolbar {
+    display: grid !important;
+    grid-template-columns: repeat(3, fit-content(9rem)) auto;
+    column-gap: calc(var(--spacing) * 1);
+    row-gap: 0;
+    align-items: center;
+  }
+
+  .media-filter-toolbar .filter-control {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .media-filter-toolbar .filter-control>button {
+    width: 100%;
+    padding-inline: calc(var(--spacing) * 2) !important;
+    padding-block: calc(var(--spacing) * 1.25) !important;
+    justify-content: flex-start;
+    text-align: left;
+    gap: calc(var(--spacing) * 1);
+  }
+
+  .media-filter-toolbar .filter-control:first-child>button {
+    padding-inline-start: 0 !important;
+  }
+
+  .media-filter-toolbar .filter-control>button span {
+    flex: 0 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: calc(100% - 1.5rem);
+  }
+
+  .media-filter-toolbar .filter-control>button svg {
+    flex: 0 0 auto;
+  }
+
+  .result-count-badge {
+    padding-inline: calc(var(--spacing) * 2) !important;
+    font-size: var(--text-xs);
+  }
+
+  .result-count-mobile {
+    display: inline-flex;
+    align-items: center;
+  }
+
+  .result-count-desktop {
+    display: none;
+  }
+
+  .media-filter-toolbar .layout-toggle {
+    margin-left: 0 !important;
+    justify-self: end;
+  }
+
+  .filter-toolbar .layout-toggle {
+    justify-self: end;
+  }
+
+  .lists-filter-toolbar {
+    width: 100%;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: calc(var(--spacing) * 4);
+  }
+
+  .lists-filter-toolbar .filter-control>button {
+    box-sizing: border-box;
+  }
+
+  .lists-filter-toolbar .filter-control:last-child>button {
+    padding-right: 0 !important;
+  }
+
+  .list-detail-filter-toolbar {
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    overflow-x: visible;
+    overflow-y: visible;
+    column-gap: calc(var(--spacing) * 1);
+    row-gap: 0;
+    align-items: center;
+  }
+
+  .list-detail-filter-toolbar>* {
+    flex: 0 0 auto;
+  }
+
+  .list-detail-filter-toolbar .filter-control {
+    width: auto;
+    min-width: fit-content;
+    flex: 0 0 auto;
+  }
+
+  .list-detail-filter-toolbar .filter-control>button {
+    width: auto;
+    white-space: nowrap;
+    padding-inline: calc(var(--spacing) * 2) !important;
+  }
+
+  .list-detail-filter-toolbar .filter-control>button span {
+    white-space: nowrap;
+    overflow: visible;
+    text-overflow: clip;
+    max-width: none;
+  }
+
+  .list-detail-filter-toolbar .ml-auto {
+    margin-left: auto !important;
+  }
+
+  .list-detail-filter-toolbar .layout-toggle {
+    margin-left: 0 !important;
+    justify-self: auto;
+    flex: 0 0 auto;
+  }
+
+  .mobile-tight-section {
+    padding: 0 !important;
+    padding-inline: calc(var(--spacing) * 2) !important;
+    background-color: transparent !important;
+    border-radius: 0;
+    overflow-x: hidden;
+  }
+
+  .stat-scroll-safe {
+    max-width: calc(100vw - 2rem);
+    margin-inline: auto;
+    width: 100%;
+    overflow-x: hidden;
+  }
+}
+
+@media (min-width: 769px) {
+  .stat-scroll-safe {
+    max-width: none;
+  }
+
+  .result-count-mobile {
+    display: none;
+  }
+
+  .result-count-desktop {
+    display: inline-flex;
+    align-items: center;
+  }
+}
+
+.select2-container--tailwindcss-4 {
+  @apply min-w-full;
+}
+
+/* Dropdown */
+.select2-container--tailwindcss-4.select2-container--open .select2-dropdown {
+  @apply w-full mt-1 overflow-auto rounded-md text-base bg-[#39404b] border-gray-600 border focus-within:border-indigo-500 focus-within:ring focus-within:ring-indigo-200/50;
+}
+
+.select2-container--tailwindcss-4 .select2-results__message {
+  @apply text-sm text-gray-400;
+}
+
+/* Hover state */
+.select2-container--tailwindcss-4 .select2-results__option--highlighted {
+  @apply text-white bg-[#454d5a];
+}
+
+/* Multiple selection */
+.select2-container--tailwindcss-4 .select2-selection--multiple {
+  @apply rounded-md text-base sm:text-sm/6 bg-[#39404b] p-1.5 cursor-default text-white border border-white/10;
+}
+
+/* Multiple selection list */
+.select2-container--tailwindcss-4 .select2-selection--multiple .select2-selection__rendered {
+  @apply flex flex-row flex-wrap gap-1.5 m-0 p-0 list-none;
+}
+
+/* Multiple selection choices */
+.select2-container--tailwindcss-4 .select2-selection--multiple .select2-selection__choice {
+  @apply flex flex-row-reverse items-center gap-1 bg-[#454d5a] text-gray-200 pl-2 pr-1 py-1 rounded-md text-sm border border-indigo-500/20;
+}
+
+/* Remove button */
+.select2-container--tailwindcss-4 .select2-selection--multiple .select2-selection__choice__remove {
+  @apply mr-1 h-4 w-4 pb-[0.10rem] items-center flex justify-center rounded-full hover:bg-red-400/10 hover:text-red-400 cursor-pointer;
+}
+
+/* Search field in multiple selection */
+.select2-container--tailwindcss-4 .select2-selection--multiple .select2-search--inline {
+  @apply inline-flex items-center flex-none my-0.5;
+}
+
+.select2-container--tailwindcss-4 .select2-selection--multiple .select2-search--inline .select2-search__field {
+  @apply w-auto min-w-[6ch] h-[1.5rem] p-0 m-0 text-sm/6 bg-transparent border-0 focus:outline-hidden focus:ring-0 placeholder:text-gray-500 placeholder:text-sm/6 placeholder:font-sans;
+}
+
+/* Focus styles for keyboard navigation */
+.select2-container--tailwindcss-4.select2-container--focus .select2-selection--multiple {
+  @apply outline-none ring-2 ring-[#4a9eff] appearance-none;
+}
+
+#chartjs-tooltip {
+  opacity: 0;
+  position: absolute;
+  background: rgba(0, 0, 0, 0.85);
+  color: white;
+  border-radius: 8px;
+  padding: 12px 16px;
+  font-size: 14px;
+  pointer-events: none;
+  z-index: 100;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+  transition: opacity 0.2s ease;
+  min-width: 180px;
+}
+
+#chartjs-tooltip table {
+  margin: 0;
+  border-spacing: 0;
+  border-collapse: collapse;
+  width: 100%;
+}
+
+#chartjs-tooltip table th {
+  text-align: center;
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+  font-size: 16px;
+  font-weight: bold;
+}
+
+#chartjs-tooltip table td {
+  padding: 6px 4px;
+  white-space: nowrap;
+}
+
+#chartjs-tooltip table tr.total-row {
+  border-top: 1px solid rgba(255, 255, 255, 0.3);
+  font-weight: bold;
+  margin-top: 6px;
+}
+
+#chartjs-tooltip table tr.total-row td {
+  padding-top: 10px;
+}
+
+#chartjs-pie-tooltip {
+  opacity: 0;
+  position: absolute;
+  background: rgba(0, 0, 0, 0.85);
+  color: white;
+  border-radius: 6px;
+  padding: 8px 12px;
+  font-size: 12px;
+  pointer-events: none;
+  z-index: 100;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+  transition: opacity 0.2s ease;
+  min-width: 140px;
+  text-align: center;
+}
+
+#chartjs-pie-tooltip .pie-label {
+  font-size: 14px;
+  font-weight: bold;
+  margin-bottom: 4px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+#chartjs-pie-tooltip .pie-value {
+  font-size: 13px;
+  margin-top: 2px;
+}
+
+#chartjs-pie-tooltip .pie-percent {
+  font-weight: bold;
+  font-size: 15px;
+  margin-top: 3px;
+}
