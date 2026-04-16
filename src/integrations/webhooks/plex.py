@@ -109,13 +109,34 @@ class PlexWebhookProcessor(BaseWebhookProcessor):
         if event_type == "media.rate":
             return self._process_rating(payload, user)
 
+        metadata = payload.get("Metadata", {}) or {}
+        title = (
+            metadata.get("grandparentTitle")
+            or metadata.get("title")
+            or "<unknown>"
+        )
+        year = metadata.get("year") or metadata.get("parentYear") or metadata.get("grandparentYear")
+        raw_guids = metadata.get("Guid", [])
+        logger.info(
+            "PLEX WEBHOOK: event=%s title='%s' year=%s type=%s guids=%s",
+            event_type,
+            title,
+            year,
+            metadata.get("type"),
+            [g.get("id", g) if isinstance(g, dict) else g for g in raw_guids],
+        )
+
         ids = self.resolve_external_ids(
             payload,
             allow_title_search=event_type not in ("media.pause", "media.stop"),
         )
         logger.info(
-            "Extracted Plex ID presence from payload: %s",
-            presence_map(ids, ("tmdb_id", "imdb_id", "tvdb_id", "anidb_id")),
+            "PLEX WEBHOOK: Resolved IDs for '%s': tmdb=%s imdb=%s tvdb=%s anidb=%s",
+            title,
+            ids.get("tmdb_id"),
+            ids.get("imdb_id"),
+            ids.get("tvdb_id"),
+            ids.get("anidb_id"),
         )
 
         playback_media_type = self._get_live_playback_media_type(payload)

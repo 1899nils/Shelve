@@ -350,6 +350,15 @@ LOGGING = {
         "urllib3": {
             "level": "DEBUG" if DEBUG else "WARNING",
         },
+        "integrations.webhooks.plex": {
+            "level": "DEBUG",
+        },
+        "integrations.imports.plex": {
+            "level": "DEBUG",
+        },
+        "integrations.views": {
+            "level": "DEBUG",
+        },
     },
     "formatters": {
         "verbose": {

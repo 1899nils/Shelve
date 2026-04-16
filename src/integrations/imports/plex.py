@@ -464,9 +464,22 @@ class PlexHistoryImporter:
             return
 
         metadata, ids = self._ensure_external_ids(metadata, uri, section_type)
-        logger.debug(
-            "Resolved Plex history ID presence: %s",
-            presence_map(ids, ("tmdb_id", "imdb_id", "tvdb_id", "anidb_id")),
+        title = (
+            metadata.get("grandparentTitle")
+            or metadata.get("title")
+            or "<unknown>"
+        )
+        year = metadata.get("year") or metadata.get("parentYear") or ""
+        raw_guids = metadata.get("Guid", [])
+        logger.info(
+            "PLEX IMPORT: title='%s' year=%s type=%s guids=%s => tmdb=%s imdb=%s tvdb=%s",
+            title,
+            year,
+            media_type,
+            [g.get("id", g) if isinstance(g, dict) else g for g in (raw_guids or [])],
+            ids.get("tmdb_id"),
+            ids.get("imdb_id"),
+            ids.get("tvdb_id"),
         )
 
         if not self._has_external_ids(ids):
