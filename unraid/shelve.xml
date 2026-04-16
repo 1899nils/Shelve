@@ -1,0 +1,51 @@
+<?xml version="1.0"?>
+<Container version="2">
+  <Name>Shelve</Name>
+  <Repository>ghcr.io/1899nils/shelve:latest</Repository>
+  <Registry>https://github.com/1899nils/Shelve/pkgs/container/shelve</Registry>
+  <Network>bridge</Network>
+  <Shell>sh</Shell>
+  <Privileged>false</Privileged>
+  <Support>https://github.com/1899nils/Shelve/issues</Support>
+  <Project>https://github.com/1899nils/Shelve</Project>
+  <Overview>Shelve - A self-hosted media tracker for movies, TV shows, anime, manga, games, books, audiobooks, podcasts, and music. Track what you watch, read, play, and listen to.</Overview>
+  <Category>MediaApp:Other</Category>
+  <WebUI>http://[IP]:[PORT:8000]/</WebUI>
+  <TemplateURL>https://raw.githubusercontent.com/1899nils/Shelve/main/unraid/shelve.xml</TemplateURL>
+  <Icon>https://raw.githubusercontent.com/1899nils/Shelve/main/src/static/favicon/android-chrome-512x512.png</Icon>
+  <ExtraParams>--restart=unless-stopped</ExtraParams>
+  <DateInstalled></DateInstalled>
+  <Description>Shelve - A self-hosted media tracker for movies, TV shows, anime, manga, games, books, audiobooks, podcasts, and music. Track what you watch, read, play, and listen to. Uses SQLite by default, optionally PostgreSQL.</Description>
+
+  <Config Name="Web UI Port" Target="8000" Default="8000" Mode="tcp" Description="Web interface port" Type="Port" Display="always" Required="true" Mask="false">8000</Config>
+
+  <Config Name="Database" Target="/shelve/db" Default="/mnt/user/appdata/shelve/db" Mode="rw" Description="SQLite database and backups" Type="Path" Display="always" Required="true" Mask="false">/mnt/user/appdata/shelve/db</Config>
+
+  <Config Name="Timezone" Target="TZ" Default="Europe/Berlin" Mode="" Description="Your timezone (e.g. Europe/Berlin, America/New_York)" Type="Variable" Display="always" Required="true" Mask="false">Europe/Berlin</Config>
+
+  <Config Name="Secret Key" Target="SECRET" Default="" Mode="" Description="Secret key for Django (use a long random string)" Type="Variable" Display="always" Required="true" Mask="true"></Config>
+
+  <Config Name="Redis URL" Target="REDIS_URL" Default="redis://shelve-redis:6379" Mode="" Description="Redis connection URL. Point to your Redis container." Type="Variable" Display="always" Required="true" Mask="false">redis://shelve-redis:6379</Config>
+
+  <Config Name="Application URL" Target="URLS" Default="" Mode="" Description="Your external URL (e.g. https://shelve.example.com). Required for reverse proxy setups." Type="Variable" Display="always" Required="false" Mask="false"></Config>
+
+  <Config Name="Admin Panel" Target="ADMIN_ENABLED" Default="False" Mode="" Description="Enable Django admin panel (True/False)" Type="Variable" Display="advanced" Required="false" Mask="false">False</Config>
+
+  <Config Name="Registration" Target="REGISTRATION" Default="True" Mode="" Description="Allow new user registration (True/False)" Type="Variable" Display="advanced" Required="false" Mask="false">True</Config>
+
+  <Config Name="Debug Mode" Target="DEBUG" Default="False" Mode="" Description="Enable debug mode (True/False). Keep disabled in production." Type="Variable" Display="advanced" Required="false" Mask="false">False</Config>
+
+  <Config Name="PUID" Target="PUID" Default="99" Mode="" Description="User ID for file permissions (99 = nobody on Unraid)" Type="Variable" Display="advanced" Required="false" Mask="false">99</Config>
+
+  <Config Name="PGID" Target="PGID" Default="100" Mode="" Description="Group ID for file permissions (100 = users on Unraid)" Type="Variable" Display="advanced" Required="false" Mask="false">100</Config>
+
+  <Config Name="DB Host" Target="DB_HOST" Default="" Mode="" Description="PostgreSQL host (leave empty to use SQLite)" Type="Variable" Display="advanced" Required="false" Mask="false"></Config>
+
+  <Config Name="DB Name" Target="DB_NAME" Default="shelve" Mode="" Description="PostgreSQL database name" Type="Variable" Display="advanced" Required="false" Mask="false">shelve</Config>
+
+  <Config Name="DB User" Target="DB_USER" Default="shelve" Mode="" Description="PostgreSQL username" Type="Variable" Display="advanced" Required="false" Mask="false">shelve</Config>
+
+  <Config Name="DB Password" Target="DB_PASSWORD" Default="" Mode="" Description="PostgreSQL password" Type="Variable" Display="advanced" Required="false" Mask="true"></Config>
+
+  <Config Name="DB Port" Target="DB_PORT" Default="5432" Mode="" Description="PostgreSQL port" Type="Variable" Display="advanced" Required="false" Mask="false">5432</Config>
+</Container>

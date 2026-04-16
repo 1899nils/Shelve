@@ -3,7 +3,7 @@ services:
     container_name: shelve
     # Image defaults to :latest tag (points to stable release branch)
     # You can also explicitly use :latest, :release, or :dev
-    image: ghcr.io/dannyvfilms/shelve
+    image: ghcr.io/1899nils/shelve
     restart: unless-stopped
     depends_on:
       - db

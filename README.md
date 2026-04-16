@@ -64,7 +64,7 @@ Important:
 ```yaml
 services:
   shelve:
-    image: ghcr.io/dannyvfilms/shelve:latest
+    image: ghcr.io/1899nils/shelve:latest
     container_name: shelve
     restart: unless-stopped
     depends_on:
@@ -106,7 +106,7 @@ Then visit `http://localhost:8000` and create your first account.
 ```yaml
 services:
   shelve:
-    image: ghcr.io/dannyvfilms/shelve:latest
+    image: ghcr.io/1899nils/shelve:latest
     container_name: shelve
     restart: unless-stopped
     depends_on:
@@ -174,7 +174,7 @@ docker run -d \
   -e REDIS_URL=redis://shelve-redis:6379 \
   -v shelve-db:/shelve/db \
   -p 8000:8000 \
-  ghcr.io/dannyvfilms/shelve:latest
+  ghcr.io/1899nils/shelve:latest
 ```
 
 Note: This setup uses named volumes (`shelve-db` and `shelve-redis-data`) and a shared network (`shelve-net`). For docker compose with more options, see the Docker Compose section above.
@@ -413,7 +413,7 @@ Beyond the major features, this fork includes hundreds of small improvements tha
 
 ## 🐳 Docker Image Tags
 
-The Docker image is available at `ghcr.io/dannyvfilms/shelve` with the following tags:
+The Docker image is available at `ghcr.io/1899nils/shelve` with the following tags:
 
 - `:latest` - Points to the stable release branch (default)
 - `:release` - Explicit tag for the release branch
@@ -425,7 +425,7 @@ If you want to contribute or customize:
 
 1. **Clone the repository:**
    ```bash
-   git clone https://github.com/dannyvfilms/Shelve.git
+   git clone https://github.com/1899nils/Shelve.git
    cd Shelve
    ```
 
@@ -469,7 +469,7 @@ Visit `http://localhost:8000` to see your local instance.
 
 ## 🌐 Demo
 
-Try the app at [shelve.dannyvfilms.com](https://shelve.dannyvfilms.com) using:
+Try the app at [shelve.1899nils.com](https://shelve.1899nils.com) using:
 - Username: `demo`
 - Password: `demodemo`
 
@@ -501,11 +501,11 @@ Show your support by starring the repository on GitHub!
 
 ### 🐛 Bug Reports
 
-Found a bug? Open an [issue](https://github.com/dannyvfilms/Shelve/issues) with detailed steps to reproduce.
+Found a bug? Open an [issue](https://github.com/1899nils/Shelve/issues) with detailed steps to reproduce.
 
 ### 💡 Feature Suggestions
 
-Have ideas? Share them through [GitHub issues](https://github.com/dannyvfilms/Shelve/issues).
+Have ideas? Share them through [GitHub issues](https://github.com/1899nils/Shelve/issues).
 
 ### 🧪 Contributing
 
