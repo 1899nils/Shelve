@@ -812,6 +812,11 @@ def integrations(request):
             option["value"] for option in plex_library_options
         ]
 
+    from app.app_settings import get_tmdb_api_key
+    from app.models import AppSettings
+
+    app_settings = AppSettings.load()
+
     return render(
         request,
         "users/integrations.html",
@@ -820,6 +825,8 @@ def integrations(request):
             "plex_webhook_needs_update": plex_webhook_needs_update,
             "plex_library_options_json": json.dumps(plex_library_options),
             "selected_plex_webhook_libraries_json": json.dumps(selected_plex_webhook_libraries),
+            "tmdb_api_key": app_settings.tmdb_api_key,
+            "tmdb_api_key_active": bool(get_tmdb_api_key()),
         },
     )
 
@@ -1273,6 +1280,21 @@ def update_jellyseerr_settings(request):
     )
 
     messages.success(request, "Jellyseerr settings saved.")
+    return redirect(request.META.get("HTTP_REFERER", "/settings/integrations"))
+
+
+@require_POST
+def update_tmdb_settings(request):
+    """Save the TMDB API key to app settings."""
+    from app.app_settings import clear_tmdb_api_key_cache
+    from app.models import AppSettings
+
+    tmdb_api_key = request.POST.get("tmdb_api_key", "").strip()
+    app_settings = AppSettings.load()
+    app_settings.tmdb_api_key = tmdb_api_key
+    app_settings.save()
+    clear_tmdb_api_key_cache()
+    messages.success(request, "TMDB API key saved.")
     return redirect(request.META.get("HTTP_REFERER", "/settings/integrations"))
 
 

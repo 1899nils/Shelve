@@ -68,4 +68,9 @@ urlpatterns = [
         views.update_jellyseerr_settings,
         name="update_jellyseerr_settings",
     ),
+    path(
+        "settings/integrations/tmdb/",
+        views.update_tmdb_settings,
+        name="update_tmdb_settings",
+    ),
 ]

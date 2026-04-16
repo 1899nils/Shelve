@@ -12,13 +12,18 @@ from app.log_safety import exception_summary
 from app.models import MediaTypes, Sources
 from app.providers import services
 
+from app.app_settings import get_tmdb_api_key
+
 logger = logging.getLogger(__name__)
 base_url = "https://api.themoviedb.org/3"
 TVDB_OVERRIDE_CACHE_TIMEOUT = 60 * 60 * 24 * 30
-base_params = {
-    "api_key": settings.TMDB_API,
-    "language": settings.TMDB_LANG,
-}
+
+
+def _get_base_params():
+    return {
+        "api_key": get_tmdb_api_key(),
+        "language": settings.TMDB_LANG,
+    }
 
 
 def handle_error(error):
@@ -180,7 +185,7 @@ def search(media_type, query, page):
         url = f"{base_url}/search/{media_type}"
 
         params = {
-            **base_params,
+            **_get_base_params(),
             "query": query,
             "page": page,
         }
@@ -235,7 +240,7 @@ def find(external_id, external_source):
         url = f"{base_url}/find/{external_id}"
 
         params = {
-            **base_params,
+            **_get_base_params(),
             "external_source": external_source,
         }
 
@@ -272,7 +277,7 @@ def movie(media_id):
             "release_dates",
         ]
         params = {
-            **base_params,
+            **_get_base_params(),
             "append_to_response": ",".join(appends),
         }
 
@@ -291,7 +296,7 @@ def movie(media_id):
                         Sources.TMDB.value,
                         "GET",
                         f"{base_url}/collection/{collection_id}",
-                        params={**base_params},
+                        params={**_get_base_params()},
                     )
                 except requests.exceptions.HTTPError as error:
                     logger.warning(
@@ -598,7 +603,7 @@ def fetch_and_cache_seasons(media_id, season_numbers, tv_data):
         )
 
         params = {
-            **base_params,
+            **_get_base_params(),
             "append_to_response": f"{base_append},{append_text}",
         }
 
@@ -705,7 +710,7 @@ def tv(media_id):
     if data is None:
         url = f"{base_url}/tv/{media_id}"
         params = {
-            **base_params,
+            **_get_base_params(),
             "append_to_response": "recommendations,external_ids,aggregate_credits,alternative_titles,watch/providers",
         }
 
@@ -852,7 +857,7 @@ def get_changed_ids(media_type):
 
     while True:
         params = {
-            **base_params,
+            **_get_base_params(),
             "start_date": start_date.isoformat(),
             "end_date": end_date.isoformat(),
             "page": page,
@@ -1451,7 +1456,7 @@ def person(person_id):
 
     url = f"{base_url}/person/{person_id}"
     params = {
-        **base_params,
+        **_get_base_params(),
         "append_to_response": "combined_credits,external_ids",
     }
     try:
@@ -1606,7 +1611,7 @@ def episode(media_id, season_number, episode_number):
     if data is None:
         url = f"{base_url}/tv/{media_id}/season/{season_number}/episode/{episode_number}"
         params = {
-            **base_params,
+            **_get_base_params(),
             "append_to_response": "credits",
         }
 
@@ -1663,7 +1668,7 @@ def watch_provider_regions():
 
     if data is None:
         url = f"{base_url}/watch/providers/regions"
-        params = {**base_params}
+        params = {**_get_base_params()}
 
         try:
             response = services.api_request(

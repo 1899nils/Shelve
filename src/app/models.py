@@ -4998,3 +4998,30 @@ class DiscoverRowCache(models.Model):
 
     def __str__(self):
         return f"{self.user_id}:{self.media_type}:{self.row_key}"
+
+
+class AppSettings(models.Model):
+    """Singleton model for application-wide settings configurable via the UI."""
+
+    tmdb_api_key = models.CharField(
+        max_length=255,
+        blank=True,
+        default="",
+        help_text="TMDB API key (get one at https://www.themoviedb.org/settings/api)",
+    )
+
+    class Meta:
+        verbose_name = "App Settings"
+        verbose_name_plural = "App Settings"
+
+    def save(self, *args, **kwargs):
+        self.pk = 1
+        super().save(*args, **kwargs)
+
+    @classmethod
+    def load(cls):
+        obj, _ = cls.objects.get_or_create(pk=1)
+        return obj
+
+    def __str__(self):
+        return "App Settings"

@@ -7,6 +7,7 @@ from datetime import date
 
 from django.conf import settings
 
+from app.app_settings import get_tmdb_api_key
 from app.discover import cache_repo
 from app.discover.schemas import CandidateItem
 from app.models import MediaTypes, Sources
@@ -15,10 +16,13 @@ from app.providers import services
 logger = logging.getLogger(__name__)
 
 TMDB_BASE_URL = "https://api.themoviedb.org/3"
-TMDB_BASE_PARAMS = {
-    "api_key": settings.TMDB_API,
-    "language": settings.TMDB_LANG,
-}
+
+
+def _get_tmdb_base_params():
+    return {
+        "api_key": get_tmdb_api_key(),
+        "language": settings.TMDB_LANG,
+    }
 
 TRENDING_TTL = 60 * 60
 CURRENT_CYCLE_TTL = 60 * 60
@@ -44,7 +48,7 @@ class TMDbDiscoverAdapter:
                 self.provider,
                 "GET",
                 f"{TMDB_BASE_URL}{endpoint}",
-                params={**TMDB_BASE_PARAMS, **params},
+                params={**_get_tmdb_base_params(), **params},
             )
             cache_repo.set_api_cache(
                 self.provider,

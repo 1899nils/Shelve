@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
-from django.conf import settings
 from django.core.management.base import BaseCommand
 from django.utils import timezone
 
+from app.app_settings import get_tmdb_api_key
 from app.models import Item, MediaTypes, Sources
 from app.providers import services
 
@@ -52,7 +52,7 @@ class Command(BaseCommand):
             "GET",
             f"{TMDB_BASE_URL}{endpoint}",
             params={
-                "api_key": settings.TMDB_API,
+                "api_key": get_tmdb_api_key(),
                 "language": settings.TMDB_LANG,
             },
         )

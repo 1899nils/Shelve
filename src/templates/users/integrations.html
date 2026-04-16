@@ -16,6 +16,40 @@
 
     <div class="bg-[#39404b] p-5 rounded-lg mb-6">
       <div class="flex items-center mb-3">
+        {% include "app/icons/server.svg" with classes="w-5 h-5 text-indigo-400 mr-2" %}
+        <h3 class="text-base font-medium">TMDB API Key</h3>
+      </div>
+      <p class="text-gray-400 mb-4 text-sm">
+        Required for movie and TV show metadata. Get a free API key at
+        <a href="https://www.themoviedb.org/settings/api" target="_blank" rel="noopener" class="text-indigo-400 hover:text-indigo-300 underline">themoviedb.org</a>.
+      </p>
+      <form method="post" action="{% url 'update_tmdb_settings' %}">
+        {% csrf_token %}
+        <div class="flex items-center gap-3 mb-3">
+          <input name="tmdb_api_key"
+                 type="text"
+                 value="{{ tmdb_api_key }}"
+                 placeholder="Enter your TMDB API key (v3 auth)"
+                 class="flex-1 py-2 px-3 bg-[#262a2f] rounded-md text-gray-300 text-sm border border-gray-600 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none font-mono">
+          <button type="submit"
+                  class="flex items-center px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors text-sm cursor-pointer whitespace-nowrap">
+            Save
+          </button>
+        </div>
+        <div class="flex items-center text-sm {% if tmdb_api_key_active %}text-green-400{% else %}text-amber-400{% endif %}">
+          {% if tmdb_api_key_active %}
+            {% include "app/icons/check.svg" with classes="w-4 h-4 mr-2 shrink-0" %}
+            <p>TMDB API key is configured and active.</p>
+          {% else %}
+            {% include "app/icons/error.svg" with classes="w-4 h-4 mr-2 shrink-0" %}
+            <p>No TMDB API key configured. Movie and TV search will not work.</p>
+          {% endif %}
+        </div>
+      </form>
+    </div>
+
+    <div class="bg-[#39404b] p-5 rounded-lg mb-6">
+      <div class="flex items-center mb-3">
         {% include "app/icons/padlock.svg" with classes="w-5 h-5 text-indigo-400 mr-2" %}
         <h3 class="text-base font-medium">API Token</h3>
       </div>

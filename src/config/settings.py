@@ -729,7 +729,7 @@ TMDB_API = config(
     "TMDB_API",
     default=secret(
         "TMDB_API_FILE",
-        "61572be02f0a068658828f6396aacf60",
+        default="",
     ),
 )
 TMDB_NSFW = config("TMDB_NSFW", default=False, cast=bool)
