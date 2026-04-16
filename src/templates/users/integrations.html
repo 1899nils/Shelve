@@ -38,7 +38,7 @@
         </div>
         <div class="flex items-center text-sm {% if tmdb_api_key_active %}text-green-400{% else %}text-amber-400{% endif %}">
           {% if tmdb_api_key_active %}
-            {% include "app/icons/check.svg" with classes="w-4 h-4 mr-2 shrink-0" %}
+            {% include "app/icons/circle-check.svg" with classes="w-4 h-4 mr-2 shrink-0" %}
             <p>TMDB API key is configured and active.</p>
           {% else %}
             {% include "app/icons/error.svg" with classes="w-4 h-4 mr-2 shrink-0" %}
