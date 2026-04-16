@@ -99,6 +99,7 @@ SpecialModels = [
     "DiscoverApiCache",
     "DiscoverTasteProfile",
     "DiscoverRowCache",
+    "AppSettings",
 ]
 for model in app_models:
     if (
