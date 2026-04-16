@@ -827,6 +827,9 @@ def integrations(request):
             "selected_plex_webhook_libraries_json": json.dumps(selected_plex_webhook_libraries),
             "tmdb_api_key": app_settings.tmdb_api_key,
             "tmdb_api_key_active": bool(get_tmdb_api_key()),
+            "trakt_account": getattr(user, "trakt_account", None),
+            "simkl_account": getattr(user, "simkl_account", None),
+            "sync_primary_source": user.sync_primary_source,
         },
     )
 

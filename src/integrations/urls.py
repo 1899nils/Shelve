@@ -75,5 +75,13 @@ urlpatterns = [
         views.jellyseerr_webhook,
         name="jellyseerr_webhook",
     ),
-
+    # Rating sync connect/disconnect
+    path("connect/trakt", views.trakt_connect, name="trakt_connect"),
+    path("connect/trakt/callback", views.trakt_connect_callback, name="trakt_connect_callback"),
+    path("disconnect/trakt", views.trakt_disconnect, name="trakt_disconnect"),
+    path("connect/simkl", views.simkl_connect, name="simkl_connect"),
+    path("connect/simkl/callback", views.simkl_connect_callback, name="simkl_connect_callback"),
+    path("disconnect/simkl", views.simkl_disconnect, name="simkl_disconnect"),
+    path("sync/set-primary", views.set_sync_primary, name="set_sync_primary"),
+    path("sync/toggle-rating/<str:service>", views.toggle_rating_sync, name="toggle_rating_sync"),
 ]

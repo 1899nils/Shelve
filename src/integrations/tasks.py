@@ -2498,6 +2498,38 @@ def update_collection_metadata_from_plex(library, user_id):
     }
 
 
+@shared_task(name="Push rating to Trakt", autoretry_for=(Exception,), retry_backoff=True, max_retries=3)
+def push_rating_trakt(user_id, item_id, score_str):
+    """Push a rating to Trakt."""
+    from integrations.rating_sync import do_push_rating_to_trakt
+
+    do_push_rating_to_trakt(user_id, item_id, score_str)
+
+
+@shared_task(name="Push rating to SIMKL", autoretry_for=(Exception,), retry_backoff=True, max_retries=3)
+def push_rating_simkl(user_id, item_id, score_str):
+    """Push a rating to SIMKL."""
+    from integrations.rating_sync import do_push_rating_to_simkl
+
+    do_push_rating_to_simkl(user_id, item_id, score_str)
+
+
+@shared_task(name="Remove rating from Trakt", autoretry_for=(Exception,), retry_backoff=True, max_retries=3)
+def remove_rating_trakt(user_id, item_id):
+    """Remove a rating from Trakt."""
+    from integrations.rating_sync import do_remove_rating_from_trakt
+
+    do_remove_rating_from_trakt(user_id, item_id)
+
+
+@shared_task(name="Remove rating from SIMKL", autoretry_for=(Exception,), retry_backoff=True, max_retries=3)
+def remove_rating_simkl(user_id, item_id):
+    """Remove a rating from SIMKL."""
+    from integrations.rating_sync import do_remove_rating_from_simkl
+
+    do_remove_rating_from_simkl(user_id, item_id)
+
+
 @shared_task(name="Scheduled backup export")
 def scheduled_backup_export(user_id, media_types=None, include_lists=True):
     """Celery task for exporting a CSV backup to the backup directory."""

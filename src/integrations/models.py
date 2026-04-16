@@ -349,7 +349,7 @@ class LastFMAccount(models.Model):
 
 
 class TraktAccount(models.Model):
-    """Store Trakt API client credentials for a user."""
+    """Store Trakt API client credentials and OAuth tokens for a user."""
 
     user = models.OneToOneField(
         settings.AUTH_USER_MODEL,
@@ -365,6 +365,26 @@ class TraktAccount(models.Model):
         blank=True,
         null=True,
         help_text="Encrypted Trakt client secret",
+    )
+    access_token = models.TextField(
+        blank=True,
+        null=True,
+        help_text="Encrypted OAuth access token for rating sync",
+    )
+    refresh_token = models.TextField(
+        blank=True,
+        null=True,
+        help_text="Encrypted OAuth refresh token for rating sync",
+    )
+    token_expires_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        help_text="When the access token expires",
+    )
+    username = models.CharField(max_length=255, blank=True, default="")
+    rating_sync_enabled = models.BooleanField(
+        default=False,
+        help_text="Whether to push ratings from Shelve to Trakt",
     )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -383,3 +403,45 @@ class TraktAccount(models.Model):
     def is_configured(self):
         """Return True when client credentials are stored."""
         return bool(self.client_id and self.client_secret)
+
+    @property
+    def is_connected(self):
+        """Return True when OAuth tokens are stored for rating sync."""
+        return bool(self.access_token and self.refresh_token)
+
+
+class SimklAccount(models.Model):
+    """Store SIMKL OAuth token for rating sync."""
+
+    user = models.OneToOneField(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="simkl_account",
+    )
+    access_token = models.TextField(
+        blank=True,
+        null=True,
+        help_text="Encrypted SIMKL OAuth access token (does not expire)",
+    )
+    username = models.CharField(max_length=255, blank=True, default="")
+    rating_sync_enabled = models.BooleanField(
+        default=False,
+        help_text="Whether to push ratings from Shelve to SIMKL",
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        """Model options."""
+
+        verbose_name = "SIMKL account"
+        verbose_name_plural = "SIMKL accounts"
+
+    def __str__(self):
+        """Readable representation."""
+        return f"SimklAccount({self.user.username})"
+
+    @property
+    def is_connected(self):
+        """Return True when OAuth token is stored."""
+        return bool(self.access_token)

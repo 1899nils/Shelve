@@ -22,7 +22,14 @@ from app.log_safety import exception_summary
 from integrations import exports, lastfm_api, pocketcasts_api, tasks
 from integrations import plex as plex_api
 from integrations.imports import anilist, helpers, simkl, trakt
-from integrations.models import AudiobookshelfAccount, LastFMAccount, PlexAccount, PocketCastsAccount
+from integrations.models import (
+    AudiobookshelfAccount,
+    LastFMAccount,
+    PlexAccount,
+    PocketCastsAccount,
+    SimklAccount,
+    TraktAccount,
+)
 from integrations.lastfm_api import LastFMAPIError, LastFMClientError, LastFMRateLimitError
 from integrations.plex_watchlist import WATCHLIST_SYNC_INTERVAL_MINUTES, WATCHLIST_TASK_NAME
 from integrations.pocketcasts_api import PocketCastsAuthError
@@ -1378,3 +1385,151 @@ def jellyseerr_webhook(request, token):
     processor = jellyseerr_webhooks.JellyseerrWebhookProcessor()
     processor.process_payload(payload, user)
     return HttpResponse(status=200)
+
+
+# ── Trakt Rating Sync Connect/Disconnect ──────────────────────────────
+
+
+@require_POST
+def trakt_connect(request):
+    """Initiate Trakt OAuth for persistent rating sync connection."""
+    redirect_uri = request.build_absolute_uri(reverse("trakt_connect_callback"))
+    state_token = secrets.token_urlsafe(32)
+    request.session[state_token] = {"purpose": "connect"}
+    return redirect(
+        f"https://trakt.tv/oauth/authorize?client_id={settings.TRAKT_API}"
+        f"&redirect_uri={redirect_uri}&response_type=code&state={state_token}",
+    )
+
+
+@require_GET
+def trakt_connect_callback(request):
+    """Handle Trakt OAuth callback and store tokens for rating sync."""
+    redirect_uri = request.build_absolute_uri(reverse("trakt_connect_callback"))
+    oauth_data = trakt.handle_oauth_callback(request, redirect_uri=redirect_uri)
+
+    account, _ = TraktAccount.objects.get_or_create(user=request.user)
+    account.access_token = helpers.encrypt(oauth_data["access_token"])
+    account.refresh_token = helpers.encrypt(oauth_data["refresh_token"])
+    account.token_expires_at = timezone.now() + timedelta(days=90)
+    account.username = oauth_data["username"]
+    account.rating_sync_enabled = True
+    account.save()
+
+    messages.success(request, f"Trakt account connected as {oauth_data['username']}.")
+    return redirect("integrations")
+
+
+@require_POST
+def trakt_disconnect(request):
+    """Remove Trakt OAuth tokens (keeps client_id/secret if configured)."""
+    account = getattr(request.user, "trakt_account", None)
+    if account:
+        account.access_token = None
+        account.refresh_token = None
+        account.token_expires_at = None
+        account.username = ""
+        account.rating_sync_enabled = False
+        account.save()
+    messages.info(request, "Trakt rating sync disconnected.")
+    return redirect("integrations")
+
+
+# ── SIMKL Rating Sync Connect/Disconnect ──────────────────────────────
+
+
+@require_POST
+def simkl_connect(request):
+    """Initiate SIMKL OAuth for persistent rating sync connection."""
+    redirect_uri = request.build_absolute_uri(reverse("simkl_connect_callback"))
+    state_token = secrets.token_urlsafe(32)
+    request.session[state_token] = {"purpose": "connect"}
+    return redirect(
+        f"https://simkl.com/oauth/authorize?client_id={settings.SIMKL_ID}"
+        f"&redirect_uri={redirect_uri}&response_type=code&state={state_token}",
+    )
+
+
+@require_GET
+def simkl_connect_callback(request):
+    """Handle SIMKL OAuth callback and store token for rating sync."""
+    code = request.GET["code"]
+    url = "https://api.simkl.com/oauth/token"
+    redirect_uri = request.build_absolute_uri(reverse("simkl_connect_callback"))
+
+    import app.providers.services as services
+
+    token_response = services.api_request(
+        "SIMKL",
+        "POST",
+        url,
+        headers={"Content-Type": "application/json"},
+        params={
+            "client_id": settings.SIMKL_ID,
+            "client_secret": settings.SIMKL_SECRET,
+            "code": code,
+            "grant_type": "authorization_code",
+            "redirect_uri": redirect_uri,
+        },
+    )
+
+    access_token = token_response["access_token"]
+    username = simkl.get_username(access_token)
+
+    account, _ = SimklAccount.objects.get_or_create(user=request.user)
+    account.access_token = helpers.encrypt(access_token)
+    account.username = username
+    account.rating_sync_enabled = True
+    account.save()
+
+    messages.success(request, f"SIMKL account connected as {username}.")
+    return redirect("integrations")
+
+
+@require_POST
+def simkl_disconnect(request):
+    """Remove SIMKL OAuth token."""
+    account = getattr(request.user, "simkl_account", None)
+    if account:
+        account.access_token = None
+        account.username = ""
+        account.rating_sync_enabled = False
+        account.save()
+    messages.info(request, "SIMKL rating sync disconnected.")
+    return redirect("integrations")
+
+
+# ── Sync Preferences ──────────────────────────────────────────────────
+
+
+@require_POST
+def set_sync_primary(request):
+    """Set the user's primary sync source."""
+    source = request.POST.get("sync_primary_source", "")
+    if source not in ("", "trakt", "simkl"):
+        messages.error(request, "Invalid sync source.")
+        return redirect("integrations")
+    request.user.sync_primary_source = source
+    request.user.save(update_fields=["sync_primary_source"])
+    messages.success(request, "Primary sync source updated.")
+    return redirect("integrations")
+
+
+@require_POST
+def toggle_rating_sync(request, service):
+    """Toggle rating sync on/off for a specific service."""
+    if service == "trakt":
+        account = getattr(request.user, "trakt_account", None)
+        if account and account.is_connected:
+            account.rating_sync_enabled = not account.rating_sync_enabled
+            account.save(update_fields=["rating_sync_enabled", "updated_at"])
+            state = "enabled" if account.rating_sync_enabled else "disabled"
+            messages.success(request, f"Trakt rating sync {state}.")
+    elif service == "simkl":
+        account = getattr(request.user, "simkl_account", None)
+        if account and account.is_connected:
+            account.rating_sync_enabled = not account.rating_sync_enabled
+            account.save(update_fields=["rating_sync_enabled", "updated_at"])
+            state = "enabled" if account.rating_sync_enabled else "disabled"
+            messages.success(request, f"SIMKL rating sync {state}.")
+    return redirect("integrations")

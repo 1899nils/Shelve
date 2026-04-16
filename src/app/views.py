@@ -6954,6 +6954,10 @@ def update_media_score(request, media_type, instance_id):
         score,
     )
 
+    from integrations.rating_sync import push_rating_to_all
+
+    push_rating_to_all(request.user, media.item, score)
+
     return JsonResponse(
         {
             "success": True,
@@ -7000,6 +7004,10 @@ def update_episode_score(request, season_id, episode_number):
         score,
         request.user,
     )
+
+    from integrations.rating_sync import push_rating_to_all
+
+    push_rating_to_all(request.user, season.item, score)
 
     return JsonResponse(
         {

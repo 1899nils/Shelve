@@ -264,6 +264,19 @@ class User(AbstractUser):
         choices=HomeSortChoices,
     )
 
+    SYNC_PRIMARY_CHOICES = [
+        ("", "None"),
+        ("trakt", "Trakt"),
+        ("simkl", "SIMKL"),
+    ]
+    sync_primary_source = models.CharField(
+        max_length=20,
+        choices=SYNC_PRIMARY_CHOICES,
+        default="",
+        blank=True,
+        help_text="Primary external service for importing data",
+    )
+
     # Media type preferences: TV Shows
     tv_enabled = models.BooleanField(default=True)
     tv_layout = models.CharField(
