@@ -1391,13 +1391,37 @@ def jellyseerr_webhook(request, token):
 
 
 @require_POST
+def save_trakt_credentials(request):
+    """Save Trakt API client ID and secret."""
+    client_id = request.POST.get("trakt_client_id", "").strip()
+    client_secret = request.POST.get("trakt_client_secret", "").strip()
+
+    if not client_id or not client_secret:
+        messages.error(request, "Both Trakt Client ID and Client Secret are required.")
+        return redirect("integrations")
+
+    account, _ = TraktAccount.objects.get_or_create(user=request.user)
+    account.client_id = helpers.encrypt(client_id)
+    account.client_secret = helpers.encrypt(client_secret)
+    account.save(update_fields=["client_id", "client_secret", "updated_at"])
+    messages.success(request, "Trakt API credentials saved.")
+    return redirect("integrations")
+
+
+@require_POST
 def trakt_connect(request):
     """Initiate Trakt OAuth for persistent rating sync connection."""
+    account = getattr(request.user, "trakt_account", None)
+    if not account or not account.is_configured:
+        messages.error(request, "Save your Trakt API credentials first.")
+        return redirect("integrations")
+
+    client_id = helpers.decrypt(account.client_id)
     redirect_uri = request.build_absolute_uri(reverse("trakt_connect_callback"))
     state_token = secrets.token_urlsafe(32)
     request.session[state_token] = {"purpose": "connect"}
     return redirect(
-        f"https://trakt.tv/oauth/authorize?client_id={settings.TRAKT_API}"
+        f"https://trakt.tv/oauth/authorize?client_id={client_id}"
         f"&redirect_uri={redirect_uri}&response_type=code&state={state_token}",
     )
 
@@ -1405,10 +1429,21 @@ def trakt_connect(request):
 @require_GET
 def trakt_connect_callback(request):
     """Handle Trakt OAuth callback and store tokens for rating sync."""
-    redirect_uri = request.build_absolute_uri(reverse("trakt_connect_callback"))
-    oauth_data = trakt.handle_oauth_callback(request, redirect_uri=redirect_uri)
+    account = getattr(request.user, "trakt_account", None)
+    if not account or not account.is_configured:
+        messages.error(request, "Trakt credentials not found.")
+        return redirect("integrations")
 
-    account, _ = TraktAccount.objects.get_or_create(user=request.user)
+    client_id = helpers.decrypt(account.client_id)
+    client_secret = helpers.decrypt(account.client_secret)
+    redirect_uri = request.build_absolute_uri(reverse("trakt_connect_callback"))
+    oauth_data = trakt.handle_oauth_callback(
+        request,
+        redirect_uri=redirect_uri,
+        client_id=client_id,
+        client_secret=client_secret,
+    )
+
     account.access_token = helpers.encrypt(oauth_data["access_token"])
     account.refresh_token = helpers.encrypt(oauth_data["refresh_token"])
     account.token_expires_at = timezone.now() + timedelta(days=90)

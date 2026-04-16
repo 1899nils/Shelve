@@ -766,6 +766,31 @@ def preferences(request):
     return render(request, "users/preferences.html", context)
 
 
+def _get_trakt_display_credential(user, field):
+    """Get a masked Trakt credential for display, or empty string."""
+    account = getattr(user, "trakt_account", None)
+    if not account:
+        return ""
+    value = getattr(account, field, None)
+    if not value:
+        return ""
+    from integrations.imports.helpers import decrypt
+
+    try:
+        decrypted = decrypt(value)
+        if len(decrypted) > 8:
+            return decrypted[:4] + "*" * (len(decrypted) - 8) + decrypted[-4:]
+        return "*" * len(decrypted)
+    except Exception:
+        return ""
+
+
+def _has_trakt_credentials(user):
+    """Check if user has saved Trakt API credentials."""
+    account = getattr(user, "trakt_account", None)
+    return account is not None and account.is_configured
+
+
 @require_GET
 def integrations(request):
     """Render the integrations settings page."""
@@ -830,6 +855,10 @@ def integrations(request):
             "trakt_account": getattr(user, "trakt_account", None),
             "simkl_account": getattr(user, "simkl_account", None),
             "sync_primary_source": user.sync_primary_source,
+            "trakt_redirect_uri": request.build_absolute_uri("/connect/trakt/callback"),
+            "trakt_client_id": _get_trakt_display_credential(user, "client_id"),
+            "trakt_client_secret": _get_trakt_display_credential(user, "client_secret"),
+            "trakt_credentials_saved": _has_trakt_credentials(user),
         },
     )
 

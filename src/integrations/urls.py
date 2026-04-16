@@ -76,6 +76,7 @@ urlpatterns = [
         name="jellyseerr_webhook",
     ),
     # Rating sync connect/disconnect
+    path("connect/trakt/credentials", views.save_trakt_credentials, name="save_trakt_credentials"),
     path("connect/trakt", views.trakt_connect, name="trakt_connect"),
     path("connect/trakt/callback", views.trakt_connect_callback, name="trakt_connect_callback"),
     path("disconnect/trakt", views.trakt_disconnect, name="trakt_disconnect"),

@@ -670,163 +670,173 @@
       </div>
     </div>
 
-  </div>
-
-  {# ── Rating Sync Section ────────────────────────────────────────── #}
-  <div class="bg-[#2a2f35] rounded-lg p-6 mt-6">
-    <div class="flex items-center mb-4">
-      {% include "app/icons/vertical-sliders.svg" with classes="w-6 h-6 text-indigo-400 mr-3" %}
-      <h2 class="text-xl font-semibold">Rating Sync</h2>
-    </div>
-    <p class="text-gray-400 mb-5 text-sm">
-      Connect your Trakt and SIMKL accounts to automatically push ratings from Shelve when you rate media.
-    </p>
-
-    {# ── Primary Source ─────────────────────────────────────────── #}
-    <div class="bg-[#39404b] p-5 rounded-lg mb-6">
+    {# ── Rating Sync Section ────────────────────────────────────────── #}
+    <div class="bg-[#39404b] p-5 rounded-lg mb-6 mt-6">
       <div class="flex items-center mb-3">
-        {% include "app/icons/database.svg" with classes="w-5 h-5 text-indigo-400 mr-2" %}
-        <h3 class="text-base font-medium">Primary Import Source</h3>
+        {% include "app/icons/vertical-sliders.svg" with classes="w-5 h-5 text-indigo-400 mr-2" %}
+        <h3 class="text-base font-medium">Rating Sync</h3>
       </div>
       <p class="text-gray-400 mb-4 text-sm">
-        Select which service is your main system for importing data. This is a recommendation for which import to use.
+        Connect your Trakt and SIMKL accounts to automatically push ratings from Shelve when you rate media.
       </p>
-      <form method="post" action="{% url 'set_sync_primary' %}">
-        {% csrf_token %}
-        <div class="flex items-center gap-4 mb-3">
-          <label class="flex items-center gap-2 text-sm text-gray-300 cursor-pointer">
-            <input type="radio" name="sync_primary_source" value=""
-                   {% if not sync_primary_source %}checked{% endif %}
-                   class="text-indigo-500 focus:ring-indigo-500 bg-[#262a2f] border-gray-600">
-            None
-          </label>
-          <label class="flex items-center gap-2 text-sm text-gray-300 cursor-pointer">
-            <input type="radio" name="sync_primary_source" value="trakt"
-                   {% if sync_primary_source == "trakt" %}checked{% endif %}
-                   class="text-indigo-500 focus:ring-indigo-500 bg-[#262a2f] border-gray-600">
-            Trakt
-          </label>
-          <label class="flex items-center gap-2 text-sm text-gray-300 cursor-pointer">
-            <input type="radio" name="sync_primary_source" value="simkl"
-                   {% if sync_primary_source == "simkl" %}checked{% endif %}
-                   class="text-indigo-500 focus:ring-indigo-500 bg-[#262a2f] border-gray-600">
-            SIMKL
-          </label>
+
+      {# ── Primary Source ─────────────────────────────────────────── #}
+      <div class="bg-[#262a2f] p-4 rounded-md mb-4">
+        <p class="text-gray-300 text-sm font-medium mb-2">Primary Import Source</p>
+        <p class="text-gray-400 mb-3 text-xs">
+          Select which service is your main system for importing data.
+        </p>
+        <form method="post" action="{% url 'set_sync_primary' %}">
+          {% csrf_token %}
+          <div class="flex items-center gap-4">
+            <label class="flex items-center gap-2 text-sm text-gray-300 cursor-pointer">
+              <input type="radio" name="sync_primary_source" value=""
+                     {% if not sync_primary_source %}checked{% endif %}
+                     class="text-indigo-500 focus:ring-indigo-500 bg-[#262a2f] border-gray-600">
+              None
+            </label>
+            <label class="flex items-center gap-2 text-sm text-gray-300 cursor-pointer">
+              <input type="radio" name="sync_primary_source" value="trakt"
+                     {% if sync_primary_source == "trakt" %}checked{% endif %}
+                     class="text-indigo-500 focus:ring-indigo-500 bg-[#262a2f] border-gray-600">
+              Trakt
+            </label>
+            <label class="flex items-center gap-2 text-sm text-gray-300 cursor-pointer">
+              <input type="radio" name="sync_primary_source" value="simkl"
+                     {% if sync_primary_source == "simkl" %}checked{% endif %}
+                     class="text-indigo-500 focus:ring-indigo-500 bg-[#262a2f] border-gray-600">
+              SIMKL
+            </label>
+            <button type="submit"
+                    class="ml-auto px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors text-sm cursor-pointer">
+              Save
+            </button>
+          </div>
+        </form>
+      </div>
+
+      {# ── Trakt Connection ───────────────────────────────────────── #}
+      <div class="bg-[#262a2f] p-4 rounded-md mb-4">
+        <div class="flex items-center justify-between mb-2">
+          <p class="text-gray-300 text-sm font-medium">Trakt</p>
+          {% if trakt_account and trakt_account.is_connected %}
+            <span class="flex items-center text-xs text-green-400">
+              {% include "app/icons/circle-check.svg" with classes="w-3.5 h-3.5 mr-1" %}
+              Connected as {{ trakt_account.username }}
+            </span>
+          {% else %}
+            <span class="text-xs text-gray-500">Not connected</span>
+          {% endif %}
+        </div>
+        <p class="text-gray-400 mb-3 text-xs">
+          Create a Trakt API app at
+          <a href="https://trakt.tv/oauth/applications/new" target="_blank" rel="noopener" class="text-indigo-400 hover:text-indigo-300 underline">trakt.tv/oauth/applications</a>
+          and enter your Client ID and Secret below. Set the redirect URI to:
+          <code class="px-1 py-0.5 bg-black/30 rounded text-xs text-gray-300">{{ trakt_redirect_uri }}</code>
+        </p>
+        <form method="post" action="{% url 'save_trakt_credentials' %}" class="mb-3">
+          {% csrf_token %}
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-2">
+            <input name="trakt_client_id"
+                   type="text"
+                   value="{{ trakt_client_id }}"
+                   placeholder="Trakt Client ID"
+                   class="py-2 px-3 bg-[#39404b] rounded-md text-gray-300 text-sm border border-gray-600 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none font-mono">
+            <input name="trakt_client_secret"
+                   type="password"
+                   value="{{ trakt_client_secret }}"
+                   placeholder="Trakt Client Secret"
+                   class="py-2 px-3 bg-[#39404b] rounded-md text-gray-300 text-sm border border-gray-600 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none font-mono">
+          </div>
           <button type="submit"
-                  class="ml-auto px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors text-sm cursor-pointer">
-            Save
+                  class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors text-sm cursor-pointer">
+            Save Credentials
           </button>
+        </form>
+        <div class="flex items-center gap-3">
+          {% if trakt_account and trakt_account.is_connected %}
+            <form method="post" action="{% url 'toggle_rating_sync' 'trakt' %}">
+              {% csrf_token %}
+              <button type="submit"
+                      class="flex items-center px-4 py-2 {% if trakt_account.rating_sync_enabled %}bg-green-600 hover:bg-green-700{% else %}bg-gray-600 hover:bg-gray-700{% endif %} text-white rounded-md transition-colors text-sm cursor-pointer">
+                {% if trakt_account.rating_sync_enabled %}
+                  Rating Push On
+                {% else %}
+                  Rating Push Off
+                {% endif %}
+              </button>
+            </form>
+            <form method="post" action="{% url 'trakt_disconnect' %}">
+              {% csrf_token %}
+              <button type="submit"
+                      class="flex items-center px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors text-sm cursor-pointer">
+                Disconnect
+              </button>
+            </form>
+          {% elif trakt_credentials_saved %}
+            <form method="post" action="{% url 'trakt_connect' %}">
+              {% csrf_token %}
+              <button type="submit"
+                      class="flex items-center px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors text-sm cursor-pointer">
+                Connect with Trakt
+              </button>
+            </form>
+          {% else %}
+            <p class="text-amber-400 text-xs">Save your Trakt API credentials first, then connect.</p>
+          {% endif %}
         </div>
-      </form>
+      </div>
+
+      {# ── SIMKL Connection ───────────────────────────────────────── #}
+      <div class="bg-[#262a2f] p-4 rounded-md">
+        <div class="flex items-center justify-between mb-2">
+          <p class="text-gray-300 text-sm font-medium">SIMKL</p>
+          {% if simkl_account and simkl_account.is_connected %}
+            <span class="flex items-center text-xs text-green-400">
+              {% include "app/icons/circle-check.svg" with classes="w-3.5 h-3.5 mr-1" %}
+              Connected as {{ simkl_account.username }}
+            </span>
+          {% else %}
+            <span class="text-xs text-gray-500">Not connected</span>
+          {% endif %}
+        </div>
+        <p class="text-gray-400 mb-3 text-xs">
+          Push ratings when you rate movies, TV shows, or anime in Shelve.
+        </p>
+        <div class="flex items-center gap-3">
+          {% if simkl_account and simkl_account.is_connected %}
+            <form method="post" action="{% url 'toggle_rating_sync' 'simkl' %}">
+              {% csrf_token %}
+              <button type="submit"
+                      class="flex items-center px-4 py-2 {% if simkl_account.rating_sync_enabled %}bg-green-600 hover:bg-green-700{% else %}bg-gray-600 hover:bg-gray-700{% endif %} text-white rounded-md transition-colors text-sm cursor-pointer">
+                {% if simkl_account.rating_sync_enabled %}
+                  Rating Push On
+                {% else %}
+                  Rating Push Off
+                {% endif %}
+              </button>
+            </form>
+            <form method="post" action="{% url 'simkl_disconnect' %}">
+              {% csrf_token %}
+              <button type="submit"
+                      class="flex items-center px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors text-sm cursor-pointer">
+                Disconnect
+              </button>
+            </form>
+          {% else %}
+            <form method="post" action="{% url 'simkl_connect' %}">
+              {% csrf_token %}
+              <button type="submit"
+                      class="flex items-center px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors text-sm cursor-pointer">
+                Connect with SIMKL
+              </button>
+            </form>
+          {% endif %}
+        </div>
+      </div>
     </div>
 
-    {# ── Trakt Connection ───────────────────────────────────────── #}
-    <div class="bg-[#39404b] p-5 rounded-lg mb-6">
-      <div class="flex items-center justify-between mb-3">
-        <div class="flex items-center">
-          {% include "app/icons/server.svg" with classes="w-5 h-5 text-indigo-400 mr-2" %}
-          <h3 class="text-base font-medium">Trakt</h3>
-        </div>
-        {% if trakt_account and trakt_account.is_connected %}
-          <span class="flex items-center text-sm text-green-400">
-            {% include "app/icons/circle-check.svg" with classes="w-4 h-4 mr-1" %}
-            Connected as {{ trakt_account.username }}
-          </span>
-        {% else %}
-          <span class="flex items-center text-sm text-gray-500">
-            Not connected
-          </span>
-        {% endif %}
-      </div>
-      <p class="text-gray-400 mb-4 text-sm">
-        Connect your Trakt account to push ratings when you rate movies, TV shows, or anime in Shelve.
-      </p>
-      <div class="flex items-center gap-3">
-        {% if trakt_account and trakt_account.is_connected %}
-          <form method="post" action="{% url 'toggle_rating_sync' 'trakt' %}">
-            {% csrf_token %}
-            <button type="submit"
-                    class="flex items-center px-4 py-2 {% if trakt_account.rating_sync_enabled %}bg-green-600 hover:bg-green-700{% else %}bg-gray-600 hover:bg-gray-700{% endif %} text-white rounded-md transition-colors text-sm cursor-pointer">
-              {% if trakt_account.rating_sync_enabled %}
-                Rating Push On
-              {% else %}
-                Rating Push Off
-              {% endif %}
-            </button>
-          </form>
-          <form method="post" action="{% url 'trakt_disconnect' %}">
-            {% csrf_token %}
-            <button type="submit"
-                    class="flex items-center px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors text-sm cursor-pointer">
-              Disconnect
-            </button>
-          </form>
-        {% else %}
-          <form method="post" action="{% url 'trakt_connect' %}">
-            {% csrf_token %}
-            <button type="submit"
-                    class="flex items-center px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors text-sm cursor-pointer">
-              Connect with Trakt
-            </button>
-          </form>
-        {% endif %}
-      </div>
-    </div>
-
-    {# ── SIMKL Connection ───────────────────────────────────────── #}
-    <div class="bg-[#39404b] p-5 rounded-lg">
-      <div class="flex items-center justify-between mb-3">
-        <div class="flex items-center">
-          {% include "app/icons/server.svg" with classes="w-5 h-5 text-indigo-400 mr-2" %}
-          <h3 class="text-base font-medium">SIMKL</h3>
-        </div>
-        {% if simkl_account and simkl_account.is_connected %}
-          <span class="flex items-center text-sm text-green-400">
-            {% include "app/icons/circle-check.svg" with classes="w-4 h-4 mr-1" %}
-            Connected as {{ simkl_account.username }}
-          </span>
-        {% else %}
-          <span class="flex items-center text-sm text-gray-500">
-            Not connected
-          </span>
-        {% endif %}
-      </div>
-      <p class="text-gray-400 mb-4 text-sm">
-        Connect your SIMKL account to push ratings when you rate movies, TV shows, or anime in Shelve.
-      </p>
-      <div class="flex items-center gap-3">
-        {% if simkl_account and simkl_account.is_connected %}
-          <form method="post" action="{% url 'toggle_rating_sync' 'simkl' %}">
-            {% csrf_token %}
-            <button type="submit"
-                    class="flex items-center px-4 py-2 {% if simkl_account.rating_sync_enabled %}bg-green-600 hover:bg-green-700{% else %}bg-gray-600 hover:bg-gray-700{% endif %} text-white rounded-md transition-colors text-sm cursor-pointer">
-              {% if simkl_account.rating_sync_enabled %}
-                Rating Push On
-              {% else %}
-                Rating Push Off
-              {% endif %}
-            </button>
-          </form>
-          <form method="post" action="{% url 'simkl_disconnect' %}">
-            {% csrf_token %}
-            <button type="submit"
-                    class="flex items-center px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors text-sm cursor-pointer">
-              Disconnect
-            </button>
-          </form>
-        {% else %}
-          <form method="post" action="{% url 'simkl_connect' %}">
-            {% csrf_token %}
-            <button type="submit"
-                    class="flex items-center px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors text-sm cursor-pointer">
-              Connect with SIMKL
-            </button>
-          </form>
-        {% endif %}
-      </div>
-    </div>
   </div>
-
 {% endblock settings_content %}
 
   {% block js %}
