@@ -208,24 +208,69 @@ def _save_lastfm_history_reset(account, cutoff_uts: int):
 @require_POST
 def trakt_oauth(request):
     """View for initiating Trakt OAuth2 authorization flow."""
+    mode = request.POST["mode"]
+    frequency = request.POST["frequency"]
+    import_time = request.POST["time"]
+
+    # If user has a connected Trakt account, use its token directly (skip OAuth)
+    account = getattr(request.user, "trakt_account", None)
+    if account and account.is_connected:
+        enc_token = account.refresh_token  # already encrypted
+        if frequency == "once":
+            tasks.import_trakt.delay(
+                token=enc_token,
+                user_id=request.user.id,
+                mode=mode,
+                username=account.username,
+            )
+            messages.info(request, "The task to import media from Trakt has been queued.")
+        else:
+            helpers.create_import_schedule(
+                account.username,
+                request,
+                mode,
+                frequency,
+                import_time,
+                "Trakt",
+                token=enc_token,
+            )
+        return redirect("import_data")
+
+    # No connected account — use standard OAuth flow
     redirect_uri = request.build_absolute_uri(reverse("import_trakt_private"))
     url = "https://trakt.tv/oauth/authorize"
     state = {
-        "mode": request.POST["mode"],
-        "frequency": request.POST["frequency"],
-        "time": request.POST["time"],
+        "mode": mode,
+        "frequency": frequency,
+        "time": import_time,
     }
     state_token = secrets.token_urlsafe(32)
     request.session[state_token] = state
+
+    # Use per-user credentials if available, fall back to global settings
+    if account and account.is_configured:
+        client_id = helpers.decrypt(account.client_id)
+    else:
+        client_id = settings.TRAKT_API
+
     return redirect(
-        f"{url}?client_id={settings.TRAKT_API}&redirect_uri={redirect_uri}&response_type=code&state={state_token}",
+        f"{url}?client_id={client_id}&redirect_uri={redirect_uri}&response_type=code&state={state_token}",
     )
 
 
 @require_GET
 def import_trakt_private(request):
     """View for handling Trakt OAuth2 callback and scheduling private import."""
-    oauth_callback = trakt.handle_oauth_callback(request)
+    # Use per-user credentials if available
+    account = getattr(request.user, "trakt_account", None)
+    if account and account.is_configured:
+        client_id = helpers.decrypt(account.client_id)
+        client_secret = helpers.decrypt(account.client_secret)
+        oauth_callback = trakt.handle_oauth_callback(
+            request, client_id=client_id, client_secret=client_secret,
+        )
+    else:
+        oauth_callback = trakt.handle_oauth_callback(request)
     enc_token = helpers.encrypt(oauth_callback["refresh_token"])
     state_token = request.GET["state"]
 
@@ -484,13 +529,37 @@ def plex_disable_watchlist(request):
 @require_POST
 def simkl_oauth(request):
     """View for initiating the SIMKL OAuth2 authorization flow."""
+    mode = request.POST["mode"]
+    frequency = request.POST["frequency"]
+    import_time = request.POST["time"]
+
+    # If user has a connected SIMKL account, use its token directly (skip OAuth)
+    account = getattr(request.user, "simkl_account", None)
+    if account and account.is_connected:
+        enc_token = account.access_token  # already encrypted
+        if frequency == "once":
+            tasks.import_simkl.delay(token=enc_token, user_id=request.user.id, mode=mode)
+            messages.info(request, "The task to import media from SIMKL has been queued.")
+        else:
+            helpers.create_import_schedule(
+                account.username,
+                request,
+                mode,
+                frequency,
+                import_time,
+                "SIMKL",
+                token=enc_token,
+            )
+        return redirect("import_data")
+
+    # No connected account — use standard OAuth flow
     redirect_uri = request.build_absolute_uri(reverse("import_simkl_private"))
     url = "https://simkl.com/oauth/authorize"
 
     state = {
-        "mode": request.POST["mode"],
-        "frequency": request.POST["frequency"],
-        "time": request.POST["time"],
+        "mode": mode,
+        "frequency": frequency,
+        "time": import_time,
     }
     state_token = secrets.token_urlsafe(32)
     request.session[state_token] = state

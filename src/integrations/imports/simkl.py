@@ -16,21 +16,28 @@ from integrations.imports.helpers import MediaImportError, MediaImportUnexpected
 logger = logging.getLogger(__name__)
 
 
-def get_token(request):
+def get_token(request, redirect_uri=None, client_id=None, client_secret=None):
     """View for getting the SIMKL OAuth2 token."""
     code = request.GET["code"]
     url = "https://api.simkl.com/oauth/token"
+
+    if not redirect_uri:
+        redirect_uri = request.build_absolute_uri(reverse("import_simkl_private"))
+    if not client_id:
+        client_id = settings.SIMKL_ID
+    if not client_secret:
+        client_secret = settings.SIMKL_SECRET
 
     headers = {
         "Content-Type": "application/json",
     }
 
     params = {
-        "client_id": settings.SIMKL_ID,
-        "client_secret": settings.SIMKL_SECRET,
+        "client_id": client_id,
+        "client_secret": client_secret,
         "code": code,
         "grant_type": "authorization_code",
-        "redirect_uri": request.build_absolute_uri(reverse("import_simkl_private")),
+        "redirect_uri": redirect_uri,
     }
 
     try:
