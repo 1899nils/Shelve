@@ -85,4 +85,6 @@ urlpatterns = [
     path("disconnect/simkl", views.simkl_disconnect, name="simkl_disconnect"),
     path("sync/set-primary", views.set_sync_primary, name="set_sync_primary"),
     path("sync/toggle-rating/<str:service>", views.toggle_rating_sync, name="toggle_rating_sync"),
+    path("sync/toggle-live/<str:service>", views.toggle_live_sync, name="toggle_live_sync"),
+    path("sync/trigger-trakt", views.trigger_trakt_sync, name="trigger_trakt_sync"),
 ]

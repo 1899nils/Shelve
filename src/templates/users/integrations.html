@@ -670,14 +670,14 @@
       </div>
     </div>
 
-    {# ── Rating Sync Section ────────────────────────────────────────── #}
+    {# ── External Services Section ─────────────────────────────────── #}
     <div class="bg-[#39404b] p-5 rounded-lg mb-6 mt-6">
       <div class="flex items-center mb-3">
         {% include "app/icons/vertical-sliders.svg" with classes="w-5 h-5 text-indigo-400 mr-2" %}
-        <h3 class="text-base font-medium">Rating Sync</h3>
+        <h3 class="text-base font-medium">External Services</h3>
       </div>
       <p class="text-gray-400 mb-4 text-sm">
-        Connect your Trakt and SIMKL accounts to automatically push ratings from Shelve when you rate media.
+        Connect external services to keep Shelve in sync. Trakt can continuously import your watch history, ratings, and watchlist. Ratings you set in Shelve are pushed back.
       </p>
 
       {# ── Primary Source ─────────────────────────────────────────── #}
@@ -717,23 +717,64 @@
 
       {# ── Trakt Connection ───────────────────────────────────────── #}
       <div class="bg-[#262a2f] p-4 rounded-md mb-4">
+        {# Header with status #}
         <div class="flex items-center justify-between mb-2">
           <p class="text-gray-300 text-sm font-medium">Trakt</p>
           {% if trakt_account and trakt_account.is_connected %}
-            <span class="flex items-center text-xs text-green-400">
-              {% include "app/icons/circle-check.svg" with classes="w-3.5 h-3.5 mr-1" %}
-              Connected as {{ trakt_account.username }}
-            </span>
+            <div class="flex items-center gap-3">
+              {% if trakt_account.sync_status == "syncing" %}
+                <span class="flex items-center text-xs text-amber-400">
+                  <svg class="w-3.5 h-3.5 mr-1 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path></svg>
+                  Syncing...
+                </span>
+              {% elif trakt_account.sync_status == "error" %}
+                <span class="flex items-center text-xs text-red-400" title="{{ trakt_account.last_sync_error }}">
+                  {% include "app/icons/circle-x.svg" with classes="w-3.5 h-3.5 mr-1" %}
+                  Sync Error
+                </span>
+              {% endif %}
+              <span class="flex items-center text-xs text-green-400">
+                {% include "app/icons/circle-check.svg" with classes="w-3.5 h-3.5 mr-1" %}
+                Connected as {{ trakt_account.username }}
+              </span>
+            </div>
           {% else %}
             <span class="text-xs text-gray-500">Not connected</span>
           {% endif %}
         </div>
-        <p class="text-gray-400 mb-3 text-xs">
-          Create a Trakt API app at
-          <a href="https://trakt.tv/oauth/applications/new" target="_blank" rel="noopener" class="text-indigo-400 hover:text-indigo-300 underline">trakt.tv/oauth/applications</a>
-          and enter your Client ID and Secret below. Set the redirect URI to:
-          <code class="px-1 py-0.5 bg-black/30 rounded text-xs text-gray-300">{{ trakt_redirect_uri }}</code>
-        </p>
+
+        {# Sync status info #}
+        {% if trakt_account and trakt_account.is_connected %}
+          <div class="flex items-center gap-4 mb-3 text-xs text-gray-400">
+            {% if trakt_account.last_synced_at %}
+              <span>Last sync: {{ trakt_account.last_synced_at|timesince }} ago</span>
+            {% else %}
+              <span>Never synced</span>
+            {% endif %}
+            {% if trakt_account.live_sync_enabled %}
+              <span class="text-green-400">Live sync active (every 15 min)</span>
+            {% else %}
+              <span class="text-gray-500">Live sync disabled</span>
+            {% endif %}
+          </div>
+          {% if trakt_account.sync_status == "error" and trakt_account.last_sync_error %}
+            <div class="mb-3 p-2 bg-red-900/20 border border-red-800/30 rounded text-xs text-red-300">
+              {{ trakt_account.last_sync_error|truncatechars:200 }}
+            </div>
+          {% endif %}
+        {% endif %}
+
+        {# Setup instructions (only when not connected) #}
+        {% if not trakt_account or not trakt_account.is_connected %}
+          <p class="text-gray-400 mb-3 text-xs">
+            Create a Trakt API app at
+            <a href="https://trakt.tv/oauth/applications/new" target="_blank" rel="noopener" class="text-indigo-400 hover:text-indigo-300 underline">trakt.tv/oauth/applications</a>
+            and enter your Client ID and Secret below. Set the redirect URI to:
+            <code class="px-1 py-0.5 bg-black/30 rounded text-xs text-gray-300">{{ trakt_redirect_uri }}</code>
+          </p>
+        {% endif %}
+
+        {# Credentials form #}
         <form method="post" action="{% url 'save_trakt_credentials' %}" class="mb-3">
           {% csrf_token %}
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-2">
@@ -753,8 +794,32 @@
             Save Credentials
           </button>
         </form>
-        <div class="flex items-center gap-3">
+
+        {# Action buttons #}
+        <div class="flex items-center gap-3 flex-wrap">
           {% if trakt_account and trakt_account.is_connected %}
+            {# Live Sync Toggle #}
+            <form method="post" action="{% url 'toggle_live_sync' 'trakt' %}">
+              {% csrf_token %}
+              <button type="submit"
+                      class="flex items-center px-4 py-2 {% if trakt_account.live_sync_enabled %}bg-green-600 hover:bg-green-700{% else %}bg-gray-600 hover:bg-gray-700{% endif %} text-white rounded-md transition-colors text-sm cursor-pointer">
+                {% if trakt_account.live_sync_enabled %}
+                  Live Sync On
+                {% else %}
+                  Live Sync Off
+                {% endif %}
+              </button>
+            </form>
+            {# Manual Sync #}
+            <form method="post" action="{% url 'trigger_trakt_sync' %}">
+              {% csrf_token %}
+              <button type="submit"
+                      class="flex items-center px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors text-sm cursor-pointer {% if trakt_account.sync_status == 'syncing' %}opacity-50{% endif %}"
+                      {% if trakt_account.sync_status == "syncing" %}disabled{% endif %}>
+                Sync Now
+              </button>
+            </form>
+            {# Rating Push Toggle #}
             <form method="post" action="{% url 'toggle_rating_sync' 'trakt' %}">
               {% csrf_token %}
               <button type="submit"
@@ -766,6 +831,7 @@
                 {% endif %}
               </button>
             </form>
+            {# Disconnect #}
             <form method="post" action="{% url 'trakt_disconnect' %}">
               {% csrf_token %}
               <button type="submit"

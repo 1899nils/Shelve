@@ -1020,6 +1020,10 @@ CELERY_BEAT_SCHEDULE = {
         "task": "Refresh Discover Profiles",
         "schedule": crontab(hour=4, minute=0),  # every day at 4 AM
     },
+    "sync_all_trakt_accounts": {
+        "task": "Sync all Trakt accounts",
+        "schedule": 60 * 15,  # every 15 minutes
+    },
 }
 
 IS_PROD = not any(cmd in sys.argv for cmd in ("runserver", "test"))

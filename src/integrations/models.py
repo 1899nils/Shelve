@@ -386,6 +386,26 @@ class TraktAccount(models.Model):
         default=False,
         help_text="Whether to push ratings from Shelve to Trakt",
     )
+    live_sync_enabled = models.BooleanField(
+        default=False,
+        help_text="Whether to periodically pull data from Trakt to Shelve",
+    )
+    last_synced_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        help_text="When the last successful sync from Trakt completed",
+    )
+    sync_status = models.CharField(
+        max_length=20,
+        choices=[("idle", "Idle"), ("syncing", "Syncing"), ("error", "Error")],
+        default="idle",
+    )
+    last_sync_error = models.CharField(
+        max_length=500,
+        blank=True,
+        default="",
+        help_text="Last sync error message, if any",
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

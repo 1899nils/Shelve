@@ -1518,6 +1518,7 @@ def trakt_connect_callback(request):
     account.token_expires_at = timezone.now() + timedelta(days=90)
     account.username = oauth_data["username"]
     account.rating_sync_enabled = True
+    account.live_sync_enabled = True
     account.save()
 
     messages.success(request, f"Trakt account connected as {oauth_data['username']}.")
@@ -1636,4 +1637,34 @@ def toggle_rating_sync(request, service):
             account.save(update_fields=["rating_sync_enabled", "updated_at"])
             state = "enabled" if account.rating_sync_enabled else "disabled"
             messages.success(request, f"SIMKL rating sync {state}.")
+    return redirect("integrations")
+
+
+@require_POST
+def toggle_live_sync(request, service):
+    """Toggle live (periodic) sync on/off for a specific service."""
+    if service == "trakt":
+        account = getattr(request.user, "trakt_account", None)
+        if account and account.is_connected:
+            account.live_sync_enabled = not account.live_sync_enabled
+            account.save(update_fields=["live_sync_enabled", "updated_at"])
+            state = "enabled" if account.live_sync_enabled else "disabled"
+            messages.success(request, f"Trakt live sync {state}.")
+        else:
+            messages.error(request, "Connect Trakt first.")
+    return redirect("integrations")
+
+
+@require_POST
+def trigger_trakt_sync(request):
+    """Manually trigger an immediate Trakt sync."""
+    account = getattr(request.user, "trakt_account", None)
+    if not account or not account.is_connected:
+        messages.error(request, "Connect Trakt first.")
+        return redirect("integrations")
+
+    from integrations import tasks as integration_tasks
+
+    integration_tasks.sync_trakt_user.delay(request.user.id)
+    messages.info(request, "Trakt sync has been queued.")
     return redirect("integrations")

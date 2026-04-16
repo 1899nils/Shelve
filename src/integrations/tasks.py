@@ -2530,6 +2530,64 @@ def remove_rating_simkl(user_id, item_id):
     do_remove_rating_from_simkl(user_id, item_id)
 
 
+@shared_task(name="Sync all Trakt accounts")
+def sync_all_trakt_accounts():
+    """Dispatch individual sync tasks for all users with live sync enabled."""
+    from integrations.models import TraktAccount
+
+    accounts = TraktAccount.objects.filter(
+        live_sync_enabled=True,
+        access_token__isnull=False,
+        refresh_token__isnull=False,
+    ).select_related("user")
+
+    for account in accounts:
+        sync_trakt_user.delay(account.user_id)
+
+
+@shared_task(name="Sync Trakt user", autoretry_for=(Exception,), retry_backoff=True, max_retries=2)
+def sync_trakt_user(user_id):
+    """Pull new data from Trakt for a single user (live sync)."""
+    from integrations.models import TraktAccount
+
+    logger = logging.getLogger(__name__)
+
+    try:
+        account = TraktAccount.objects.select_related("user").get(user_id=user_id)
+    except TraktAccount.DoesNotExist:
+        return
+
+    if not account.is_connected:
+        return
+
+    account.sync_status = "syncing"
+    account.last_sync_error = ""
+    account.save(update_fields=["sync_status", "last_sync_error"])
+
+    try:
+        with disable_fetch_releases():
+            trakt.importer(
+                token=account.refresh_token,
+                user=account.user,
+                mode="new",
+                username=account.username,
+            )
+
+        account.sync_status = "idle"
+        account.last_synced_at = timezone.now()
+        account.last_sync_error = ""
+        account.save(update_fields=["sync_status", "last_synced_at", "last_sync_error"])
+
+        events.tasks.reload_calendar.delay()
+
+    except Exception as exc:
+        logger.exception("Trakt live sync failed for user %s", user_id)
+        account.sync_status = "error"
+        account.last_sync_error = str(exc)[:500]
+        account.save(update_fields=["sync_status", "last_sync_error"])
+        raise
+
+
 @shared_task(name="Scheduled backup export")
 def scheduled_backup_export(user_id, media_types=None, include_lists=True):
     """Celery task for exporting a CSV backup to the backup directory."""
